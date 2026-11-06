@@ -422,7 +422,6 @@ export default {
   甲: "A",
   '确实要让他知道、但不用他做什么的 notice 才加 "fyi":true：它一样会推送，发完就结案，下一轮看不到。还没解决的事、没跑成的一轮不要加。':
     'Add "fyi":true only to a notice the owner really needs to know about but need not act on. It is still sent, then closed immediately, and will not appear in the next round. Do not add it for unresolved items or a failed round.',
-  "第 {0} 轮": "Round {0}",
   "第 {0} 轮 · {1}": "Round {0} · {1}",
   等你决定: "Your call",
   等重派: "Waiting for retry",

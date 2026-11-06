@@ -418,7 +418,8 @@ function applyReceipt(draft: Draft, run: Row, result: Result) {
   }
   for (const item of result.resolve ?? []) {
     const card = openInScope(draft.view, run).find((card) => card.id === item.card);
-    if (card) closeCard(draft, card, item.reason.trim(), t`第 ${id} 轮`);
+    // Who closed it is stored as it always was, like every `by`: data, not words for whoever reads it.
+    if (card) closeCard(draft, card, item.reason.trim(), `第 ${id} 轮`);
     else rejected.push({ card: item.card, reason: t`不在本轮核对范围` });
   }
   for (const ask of result.ask ?? []) cardFromReceipt(draft, run, "ask", ask);

@@ -1,14 +1,15 @@
 // What the three languages change, end to end. Failure cases: a prompt in one language tells an agent to start its last
 // message with words the worker doesn't read, so a failed round counts as done and is never tried again; the hub's own
 // words don't follow the rules' language, or follow the process's instead, so one decision says different things; the
-// command line doesn't speak the language of the rules it runs with.
+// command line doesn't speak the language of the rules it runs with; who closed a card is stored in the rules' language,
+// so the log says it differently from one language to the next.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-import { empty, evolve } from "../kernel/evolve.ts";
+import { empty, evolve, rows } from "../kernel/evolve.ts";
 import { decide } from "../kernel/decide.ts";
 import { parseRules } from "../protocol/rules.ts";
 import { promptFor, readMessage } from "../worker/contract.ts";
@@ -86,6 +87,27 @@ test("the hub's own words follow the rules' language, whatever the process speak
   } finally {
     speak(before);
   }
+});
+
+test("who closed a card is stored as it always was, whatever the rules speak", () => {
+  const environment = { secret: "s", publicUrl: "x" };
+  const rules = { ...parseRules(fixture, 0, "UTC"), language: "en" };
+  let view = evolve(empty(), decide(empty(), { type: "rules", args: [rules] }, 1, environment).facts);
+  const act = (type: string, ...args: unknown[]) => {
+    const decided = decide(view, { type, args }, 1000, environment);
+    view = evolve(view, decided.facts);
+    return decided.value;
+  };
+  act("ingest", "app", { id: "1", type: "feedback.new" });
+  const first = act("claimNext", "w1", "c");
+  act("finish", first.run, first.token, { outcome: "done", notice: [{ title: "要看一下", text: "磁碟快滿了" }] });
+  const card = rows(view, "cards")[0];
+  act("ingest", "app", { id: "2", type: "feedback.new" });
+  const second = act("claimNext", "w1", "c");
+  act("finish", second.run, second.token, { outcome: "done", resolve: [{ card: card.id, reason: "清掉了" }] });
+  const closed = view.get("cards", card.id)!;
+  assert.equal(closed.state, "closed");
+  assert.equal(closed.by, `第 ${second.run} 轮`);
 });
 
 const dir = mkdtempSync(join(tmpdir(), "agent-autoloop-languages-"));
