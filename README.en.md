@@ -4,6 +4,8 @@
 
 [中文](README.md) | **English**
 
+> This is a fork of [KKKKhazix/agent-autoloop](https://github.com/KKKKhazix/agent-autoloop) that adds software common in Taiwan and the US (Telegram first) and Traditional Chinese and English interfaces. Installing and `update` follow this fork's own releases.
+
 [Get started](#get-started) · [Recipes](#ready-to-use-recipes) · [Plugins](#plugin-ecosystem-swap-any-of-the-four-sides) · [Kernel](#four-kernel-mechanisms) · [Docs](#documentation)
 
 ![Architecture](docs/architecture.en.svg)
@@ -22,13 +24,13 @@ Most of us use command-line agents like Claude Code or Codex by babysitting a te
 
 Works on macOS and Linux. You need Node 24, Git, curl, and at least one command-line agent already signed in; no GitHub account required. You can also hand the [installation guide](INSTALL.md) to your agent and let it install everything for you.
 
-> **Windows: pending.** Many of you have asked for a Windows version, and I've seen every request. I'm away on a work trip without a Windows machine, so I can't build or test it on real hardware, and it doesn't run on Windows yet. When I get home this weekend (November 7–8), I'll finish it, run compatibility tests, and then release it properly. Progress will be posted in [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17). If you can't wait, WSL2 works for now; see [INSTALL](INSTALL.md) for what to expect.
+> **Windows: not supported yet.** Upstream is working on it; progress is in upstream's [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17). WSL2 works for now; see [INSTALL](INSTALL.md) for what to expect.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/KKKKhazix/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
 ```
 
-The installer and `agent-autoloop update` both install the newest [release](https://github.com/KKKKhazix/agent-autoloop/releases), which has passed every check.
+The installer and `agent-autoloop update` both install the newest [release](https://github.com/Jimmy-Prime/agent-autoloop/releases), which has passed every check.
 
 Then run a real loop with your own agent — ask, exit while it waits, make the call, resume:
 

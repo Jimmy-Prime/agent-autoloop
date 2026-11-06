@@ -3,7 +3,8 @@
 // made before releases, sitting on main, is left there; a copy from a repository given by hand is sent to tags it was never
 // asked to follow, or run over with the installer and left unable to update; a failed look at the releases counts as being
 // up to date or as there being none, which would install main, or an update with nothing new restarts the service; installing says
-// something about detached HEADs; a copy that fetched only its own tag can't say which release it is. No network: git's own insteadOf points the public address at a repository made here.
+// something about detached HEADs; a copy that fetched only its own tag can't say which release it is. An install of
+// upstream's release, run over with this fork's installer, fails or stays on upstream. No network: git's own insteadOf points the public address at a repository made here.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -23,7 +24,7 @@ import { after, test } from "node:test";
 import { updateCode } from "../cli/update.ts";
 import { releaseOf } from "../host/version.ts";
 
-const PUBLISHED = "https://github.com/KKKKhazix/agent-autoloop.git";
+const PUBLISHED = "https://github.com/Jimmy-Prime/agent-autoloop.git";
 const script = join(import.meta.dirname, "..", "install.sh");
 const dir = realpathSync(mkdtempSync(join(tmpdir(), "agent-autoloop-releases-")));
 after(() => rmSync(dir, { recursive: true, force: true }));
@@ -194,4 +195,28 @@ test("the installer run over a copy from elsewhere leaves it following there, an
   assert.equal(at(it.app), newer, "not sent to a release");
   assert.equal(git(it.app, "rev-parse", "--abbrev-ref", "HEAD"), "main");
   assert.deepEqual(updateCode(it.app), { changed: false, to: null });
+});
+
+test("the installer run over an install of upstream's release moves it to this fork's newest release", () => {
+  const UPSTREAM = "https://github.com/KKKKhazix/agent-autoloop.git";
+  const upstream = join(dir, "upstream");
+  mkdirSync(join(upstream, "bin"), { recursive: true });
+  git(upstream, "init", "-q");
+  writeFileSync(join(upstream, "bin", "agent-autoloop.ts"), '#!/bin/sh\necho "upstream $*" >> "$RAN"\n');
+  chmodSync(join(upstream, "bin", "agent-autoloop.ts"), 0o755);
+  git(upstream, "add", "-A");
+  git(upstream, "commit", "-q", "-m", "upstream");
+  git(upstream, "tag", "v9.0.0");
+  writeFileSync(gitConfig, readFileSync(gitConfig, "utf8") + `[url "file://${upstream}"]\n\tinsteadOf = ${UPSTREAM}\n`);
+  const person = join(dir, "from-upstream");
+  mkdirSync(join(person, "hub"), { recursive: true });
+  const app = join(person, "hub", "app");
+  git(dir, "-c", "advice.detachedHead=false", "clone", "-q", "--depth", "1", "--branch", "v9.0.0", UPSTREAM, app);
+  writeFileSync(join(person, "hub", "config.json"), "{}");
+  const it = install(person);
+  assert.equal(git(app, "config", "--get", "remote.origin.url"), PUBLISHED);
+  const newest = releaseOf(app);
+  assert.match(newest ?? "", /^v1\.\d+\.0$/, "this fork's release, not upstream's v9.0.0");
+  assert.match(it.out, /fork/);
+  assert.deepEqual(updateCode(app), { changed: false, to: newest });
 });

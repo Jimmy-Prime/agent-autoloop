@@ -4,6 +4,8 @@
 
 **中文** | [English](README.en.md)
 
+> 这是 [KKKKhazix/agent-autoloop](https://github.com/KKKKhazix/agent-autoloop) 的 fork：补上台湾、美国常用的软件（先做 Telegram），并提供繁体中文与英文界面。安装与 `update` 跟着这个 fork 自己的 Release。
+
 [上手](#上手) · [场景模板](#拿来即用的场景模板) · [插件](#插件体系四个方向都能自由替换) · [内核](#内核的四个机制) · [文档](#更多文档)
 
 ![架构图](docs/architecture.svg)
@@ -22,13 +24,13 @@
 
 支持 macOS 和 Linux。运行前需要装好 Node 24、Git、curl，以及任意一个你已经登录好的命令行 Agent，不需要 GitHub 账号。也可以直接把[安装说明](INSTALL.md)丢给你的 Agent，让它替你装好。
 
-> **Windows 版：待定。** 很多朋友在问 Windows 版，我都看到了。我现在人在外面出差，手边没有 Windows 电脑，没法真机开发和测试，所以现在还不能在 Windows 上用。这个周末（11 月 7、8 日）回家后，我会把它开发完，做完兼容性测试，再正式推出。进度会更新在 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)。等不及的话可以先用 WSL2，注意事项见 [INSTALL](INSTALL.md)。
+> **Windows：还不支持。** 上游正在开发，进度见上游的 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)。现在可以先用 WSL2，注意事项见 [INSTALL](INSTALL.md)。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/KKKKhazix/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
 ```
 
-安装和 `agent-autoloop update` 都装最新的 [Release](https://github.com/KKKKhazix/agent-autoloop/releases)，那是通过了全部检查的版本。
+安装和 `agent-autoloop update` 都装最新的 [Release](https://github.com/Jimmy-Prime/agent-autoloop/releases)，那是通过了全部检查的版本。
 
 装好后用你本机的 Agent 真实走一遍“提问 → 退出等回复 → 拍板 → 接着干完”：
 

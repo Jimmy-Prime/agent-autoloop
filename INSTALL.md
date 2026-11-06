@@ -4,7 +4,7 @@
 
 ## 安装
 
-支持 macOS、Linux。Windows 版待定：作者这个周末（11 月 7、8 日）回家后开发并做兼容性测试，进度见 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)，现在还不能直接装。在 WSL2 里按 Linux 安装能跑通（有用户实测过），要知道这几件事：系统服务要发行版开着 systemd（`/etc/wsl.conf` 里 `systemd=true`，没开就加 `--no-service`，自己运行 `agent-autoloop up`），默认也不会在没人登录时启动，要的话运行 `loginctl enable-linger`；桌面通知到不了 Windows 桌面，用 `agent-autoloop status` 看卡片，或者接飞书等通道；用 `command` 接的 Agent 不上报用量，Token 和费用显示“没上报”；WSL2 本身要占 1GB 左右内存。
+支持 macOS、Linux。Windows 还不支持：上游正在开发，进度见上游的 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)，现在还不能直接装。在 WSL2 里按 Linux 安装能跑通（有用户实测过），要知道这几件事：系统服务要发行版开着 systemd（`/etc/wsl.conf` 里 `systemd=true`，没开就加 `--no-service`，自己运行 `agent-autoloop up`），默认也不会在没人登录时启动，要的话运行 `loginctl enable-linger`；桌面通知到不了 Windows 桌面，用 `agent-autoloop status` 看卡片，或者接飞书等通道；用 `command` 接的 Agent 不上报用量，Token 和费用显示“没上报”；WSL2 本身要占 1GB 左右内存。
 
 需要 Node.js 24 或更新、Git、curl，以及一个已经登录的命令行 Agent。
 
@@ -13,12 +13,12 @@
 本仓库已公开，安装脚本和代码都可匿名下载，不需要 GitHub 账号、登录或 GitHub CLI（`gh`）。下面的命令安装并启用登录后常驻服务：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/KKKKhazix/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
 ```
 
 GitHub Issue 轮询和 PR 交付等功能另需已登录的 `gh`，按对应场景说明配置；运行 Agent 也仍需该 Agent 自己的登录或授权。
 
-安装和 `agent-autoloop update` 都装最新的 Release，那是通过了全部检查的版本，`main` 上还没发布的改动要等下一个 Release。
+安装和 `agent-autoloop update` 都装最新的 Release，那是通过了全部检查的版本，`main` 上还没发布的改动要等下一个 Release。已经装了上游 KKKKhazix/agent-autoloop 正式版的，直接运行上面的安装命令，就会改成跟着这个 fork 的 Release，规则、密钥和记录都保留。
 
 用户指定本地仓库时，用该目录的安装脚本，并把 `AGENT_AUTOLOOP_REPO` 设成它的绝对路径。不要下载 GitHub 的旧脚本，也不要用未提交的文件冒充已安装版本；这时安装器克隆的是本地仓库的 HEAD，`update` 也跟着那个仓库走，不看 Release。已经装过时这个变量不起作用，还跟着原来的来源走；要换来源，先运行 `agent-autoloop uninstall` 再装。
 

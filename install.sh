@@ -1,7 +1,8 @@
 #!/bin/sh
 # Installs Agent 自动化中台: a clone in ~/.agent-autoloop/app, with nothing to build and nothing else to install.
 set -e
-PUBLISHED=https://github.com/KKKKhazix/agent-autoloop.git
+PUBLISHED=https://github.com/Jimmy-Prime/agent-autoloop.git
+UPSTREAM=https://github.com/KKKKhazix/agent-autoloop.git
 REPO="${AGENT_AUTOLOOP_REPO:-$PUBLISHED}"
 ROOT="${AGENT_AUTOLOOP_HOME:-$HOME/.agent-autoloop}"
 APP="$ROOT/app"
@@ -34,6 +35,13 @@ chmod 700 "$ROOT"
 from="$REPO"
 if [ -d "$APP/.git" ]; then
   from=$(git -C "$APP" config --get remote.origin.url || true)
+  # Running this fork's installer over upstream's published copy is asking for the fork. Left on upstream's origin, a
+  # release's detached HEAD has nothing to pull, and the install would fail.
+  if [ "$from" = "$UPSTREAM" ] && [ "$REPO" = "$PUBLISHED" ]; then
+    git -C "$APP" remote set-url origin "$PUBLISHED"
+    from="$PUBLISHED"
+    echo "原来跟着上游 KKKKhazix/agent-autoloop，现在改成跟着这个 fork 的 Release。"
+  fi
 fi
 release=""
 if [ "$from" = "$PUBLISHED" ]; then
