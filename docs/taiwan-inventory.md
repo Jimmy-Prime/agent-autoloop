@@ -29,7 +29,8 @@
 | 3b：程式字串三語 | 已 commit。約 600 條 `` t`…` ``；繁中由 `scripts/words.ts` 產生，英文手工（Codex 翻、我驗收）；`install.sh` 自己的訊息也三語 |
 | 3c：文件三語 | 已 commit。繁中文件由 `scripts/docs.ts` 產生；英文文件 13 份（Codex、Cursor Agent 翻，我驗收）；架構圖加上 Telegram |
 | 4：場景模板、README 的 Agent 表 | 未開始 |
-| 同步上游 | 2026-11-06 合併上游 main `ed748d3`（v1.6.0 之後：原生 Windows、發版政策、待複查任務）。`install.ps1` 指向這個 fork、照 Windows 顯示語言選語言；Windows 只有靜態檢查，還沒在 Windows 上實跑 |
+| 同步上游 | 2026-11-06 合併上游 main `ed748d3`（v1.6.0 之後：原生 Windows、發版政策、待複查任務）。`install.ps1` 指向這個 fork、照 Windows 顯示語言選語言；Windows 已在 CI 的 Windows 機器上跑過安裝冒煙，還沒在實體 Windows 上手動試 |
+| 發版 | 2026-11-06 發布 v1.7.0（`0c4382c`）：CI 三平台、每日檢查、真的 Claude Code 跑過 `try`、Codex 整批審查（找到的 P3 已修） |
 
 ---
 
@@ -305,4 +306,5 @@ GitHub、GitLab Webhook 和通用 HTTP `/v1/events` 本來就是全球通用的�
 | 改了簡體文件卻沒重產繁中版，純文件的 PR 不會被擋 | 要讓測試讀文件，就得把所有文件改成會跑測試的分流；合進 `main` 後的快速測試也不讀文件。改文件時照 AGENTS.md 跑 `node scripts/docs.ts` |
 | 英文文件要手動跟上簡體版 | 沒有可靠的自動翻譯；上游改了文件就要補 |
 | 中控台在跑的時候改了 `language`，已經在跑的那一輪照舊用原來的語言 | 新的一輪就會用新語言 |
+| `tests/plugin-trouble.test.ts` 的「插件讀不懂自己的輸出」在 Windows CI 上偶發逾時（最多等 20 秒，正常約 14 秒），重跑就過 | 上游的測試，跟這個 fork 的改動無關；再碰到就回報上游 |
 | HTTP 層的錯誤訊息語言是每個請求進來時設定的；剛改完 `language` 的那一刻，同時進來的請求可能拿到另一種語言的錯誤（Codex 審查 3b 找到） | 只影響錯誤訊息的語言，不影響判斷、事實或權限 |
