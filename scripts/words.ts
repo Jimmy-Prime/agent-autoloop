@@ -98,6 +98,9 @@ const BEFORE: [string | RegExp, string][] = [
   // OpenCC would make even 對象 an object, so it goes through as a character it leaves alone.
   [/(?<!要是一个|要是|有限的|Git |JSON )对象/g, "\uE000"],
   ["全局", "整体"],
+  // 干 here is only ever "do"; OpenCC makes it 幹, a curse in Taiwan.
+  ["干活", "做事"],
+  [/干(?![净扰涉预燥杯])/g, "做"],
   ["模板", "范本"],
   // A database's transaction, which is all 事务 means here.
   ["事务", "交易"],

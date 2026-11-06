@@ -44,7 +44,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <!-- 顶部自动闭环回弧：自己干完 / 到点复查 -> 回到核心 -->
 <path class="back" d="M851 66V28H480V63"/>
 <rect class="loop-pill" x="492" y="13" width="344" height="30" rx="15"/>
-<text x="664" y="33" class="loop-text" text-anchor="middle">自動閉環：自己幹完 · 到點複查 · 觸發下一步</text>
+<text x="664" y="33" class="loop-text" text-anchor="middle">自動閉環：自己做完 · 到點複查 · 觸發下一步</text>
 
 <!-- 左：事件插件 -->
 <rect class="plug" x="22" y="68" width="174" height="316" rx="14"/>
@@ -77,7 +77,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <!-- 内核核心职责 -->
 <rect class="duty" x="268" y="116" width="424" height="52" rx="10"/>
 <text x="480" y="139" class="cn" text-anchor="middle">按你的規則分派任務</text>
-<text x="480" y="158" class="cd" text-anchor="middle">決定交給哪個 Agent、去哪個目錄幹 · 同一件事自動合併</text>
+<text x="480" y="158" class="cd" text-anchor="middle">決定交給哪個 Agent、去哪個目錄做 · 同一件事自動合併</text>
 
 <!-- 4 个内核机制标签 -->
 <rect class="chip" x="268" y="180" width="424" height="40" rx="9"/>
@@ -114,7 +114,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <!-- 右：Agent 插件 -->
 <rect class="plug" x="764" y="68" width="174" height="316" rx="14"/>
 <text x="780" y="100" class="h2">Agent 外掛</text>
-<text x="780" y="121" class="s">負責幹活的 AI</text>
+<text x="780" y="121" class="s">負責做事的 AI</text>
 <rect class="item" x="778" y="142" width="146" height="36" rx="8"/>
 <text x="851" y="165" class="r" text-anchor="middle">Claude Code</text>
 <rect class="item" x="778" y="188" width="146" height="36" rx="8"/>
@@ -128,7 +128,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <circle class="dot" cx="851" cy="342" r="2.4"/>
 <circle class="dot" cx="863" cy="342" r="2.4"/>
 
-<!-- 下方人机闭环：4 拿不准才问你 -> 通道外掛 -> 你 -> 5 拍板後接著幹 -->
+<!-- 下方人机闭环：4 拿不准才问你 -> 通道外掛 -> 你 -> 5 拍板後接著做 -->
 <path class="conn" d="M560 386V448"/>
 <circle class="badge" cx="560" cy="417" r="12"/>
 <text x="560" y="421.5" class="n" text-anchor="middle">4</text>
@@ -153,11 +153,11 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <text x="248" y="493" class="you-t" text-anchor="middle">你</text>
 <text x="248" y="517" class="you-s" text-anchor="middle">只管拍板</text>
 
-<!-- 5: 你的回答 -> 回到核心接著幹 -->
+<!-- 5: 你的回答 -> 回到核心接著做 -->
 <path class="conn" d="M248 452V410H400V386"/>
 <circle class="badge" cx="324" cy="410" r="12"/>
 <text x="324" y="414.5" class="n" text-anchor="middle">5</text>
-<text x="232" y="415" class="l" text-anchor="end">點一下，接著原對話幹完</text>
+<text x="232" y="415" class="l" text-anchor="end">點一下，接著原對話做完</text>
 
 <!-- 底部：交付流水线 -->
 <rect class="plug" x="22" y="584" width="916" height="72" rx="14"/>

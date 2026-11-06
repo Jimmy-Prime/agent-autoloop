@@ -39,7 +39,7 @@ node --disable-warning=ExperimentalWarning --test --test-name-pattern='agent-aut
 
 `turn` 包含 `prompt`、`session`、`resume`、`cwd`、`access`、`model`、`effort`、`command`、`contextFile`、`folder`。`contextFile` 是資料檔案，受限 CLI 需要允許讀取 `folder`。`read` 要能處理未寫完的輸出；CLI 真正完成後才返回 `text`。`read` 拋錯或什麼也不返回時，還在跑的接著跑，結束後這一輪算沒跑成，留在原會話重派。
 
-支援 `resume` 的外掛，從 Agent 收下提示詞起都要返回 `started: true`，包括執行中和出錯之後。否則幹到一半斷了，也會被當成會話接不上，開新會話把業務重做一遍。返回了 `session` 就要按 `turn.resume` 接回原會話：沒跑成的重派和寫錯回條的重寫都靠它；接不回去的 CLI 不要返回 `session`。
+支援 `resume` 的外掛，從 Agent 收下提示詞起都要返回 `started: true`，包括執行中和出錯之後。否則做到一半斷了，也會被當成會話接不上，開新會話把業務重做一遍。返回了 `session` 就要按 `turn.resume` 接回原會話：沒跑成的重派和寫錯回條的重寫都靠它；接不回去的 CLI 不要返回 `session`。
 
 `usage` 是這次啟動用掉的量。有的 CLI 只給整個會話累計到現在的數（Codex 的 Token、Claude Code 的費用），這幾項放進 `sessionUsage`，同時要返回 `session`。接單程式啟動前記下這個會話上次的累計值，結束後相減，和 `usage` 合起來上報；這些記錄放在 `~/.agent-autoloop/worker/usage/`，接單程式中途重啟也不會多算。
 

@@ -65,7 +65,7 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 "hermes": { "name": "Hermes", "worker": "my-mac", "use": "command", "command": ["hermes", "chat", "-Q", "-q", "{prompt}"] }
 ```
 
-退出碼不是 0 算沒跑成。要會話接續、開啟會話的連結和用量統計，在 `~/.agent-autoloop/plugins/<名字>/agent.ts` 寫一個外掛（照 `plugins/codex/agent.ts`）：`command` 給命令列，`read` 從輸出讀最後一條訊息和會話，Agent 收下提示詞後帶上 `started: true`（否則幹到一半斷了會開新會話重做），`link` 給連結。
+退出碼不是 0 算沒跑成。要會話接續、開啟會話的連結和用量統計，在 `~/.agent-autoloop/plugins/<名字>/agent.ts` 寫一個外掛（照 `plugins/codex/agent.ts`）：`command` 給命令列，`read` 從輸出讀最後一條訊息和會話，Agent 收下提示詞後帶上 `started: true`（否則做到一半斷了會開新會話重做），`link` 給連結。
 
 `access` 預設 `edit`，專用外掛翻譯成對應 CLI 的權限；`command` 只傳參數，不替任意程式限制權限，按該 CLI 文件設定。要完整權限、不審批的話寫 `full`，先和使用者說清楚。
 
@@ -199,7 +199,7 @@ MCP 服務不區分呼叫方，都按本人記錄（`answer` 記成本人，`emi
 手機要批卡片、別人的 Webhook 要進來時，把中控台放到一台有公網的機器上：
 
 1. 伺服器上 `sh install.sh --no-service --command true`（這台不跑 Agent，`--command true` 只是佔位，第 2 步把 `rules.json` 裡的 Agent 換成真的），`config.json` 裡 `hub.listen` 用 `127.0.0.1:3350`（要寫成 `主機:埠`，IPv6 用 `[地址]:埠`；只寫埠或 `:埠` 會被拒絕，避免意外監聽所有網絡卡），`hub.publicUrl` 寫公網地址，去掉 `worker`，再 `agent-autoloop service install`。前面放一個做 HTTPS 的反向代理（Caddy、nginx）。
-2. 每台幹活的電腦：伺服器上 `agent-autoloop key new worker <名字>`，電腦上 `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh -s -- join https://中控台地址 --worker <名字> --key <金鑰>`。`rules.json` 的 Agent 寫上對應的 `worker`。
+2. 每台做事的電腦：伺服器上 `agent-autoloop key new worker <名字>`，電腦上 `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh -s -- join https://中控台地址 --worker <名字> --key <金鑰>`。`rules.json` 的 Agent 寫上對應的 `worker`。
 
 電腦不用開放任何埠，它們自己連過去。
 

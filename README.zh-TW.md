@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/ins
 
 安裝和 `agent-autoloop update` 都裝最新的 [Release](https://github.com/Jimmy-Prime/agent-autoloop/releases)，那是通過了全部檢查的版本。
 
-裝好後用你本機的 Agent 真實走一遍“提問 → 退出等回覆 → 拍板 → 接著幹完”：
+裝好後用你本機的 Agent 真實走一遍“提問 → 退出等回覆 → 拍板 → 接著做完”：
 
 ```bash
 agent-autoloop try
@@ -43,7 +43,7 @@ agent-autoloop try
 下面是在終端機裡的真實輸出：
 
 ```text
-事件發出去了，Agent 開始幹活……
+事件發出去了，Agent 開始做事……
 
 Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不花 Token。
 
@@ -52,7 +52,7 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
   1. 藍色
   2. 綠色
 回答：agent-autoloop answer 1 <序號>
-答完執行 agent-autoloop status，能看到它接著把活幹完。
+答完執行 agent-autoloop status，能看到它接著把活做完。
 ```
 
 互動終端機裡直接輸入數字回車；非互動終端機執行 `agent-autoloop answer 1 2` 選擇“綠色”。再跑 `agent-autoloop status`，就能看到它接上剛才的會話並顯示“你選了綠色，試跑通過”，還有今天和最近 7 天的輪數、Token 和費用（[統計口徑](skills/agent-autoloop/SKILL.zh-TW.md#看情況回答)）。
@@ -62,10 +62,10 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
 編號和上面的架構圖一一對應：
 
 1. **新事件進來。** 早上 9 點的定時任務、GitHub 上新提的 Issue、業務系統報的錯，都變成一條標準事件送進核心。
-2. **按規則派活。** 核心照你寫的規則，決定交給哪個 Agent、去哪個目錄幹。同一件事排隊時又來的訊息，會合併成一輪處理。
-3. **幹完一輪就退出。** Agent 把結果寫在最後一條回覆裡，行程直接退出。
+2. **按規則派活。** 核心照你寫的規則，決定交給哪個 Agent、去哪個目錄做。同一件事排隊時又來的訊息，會合併成一輪處理。
+3. **做完一輪就退出。** Agent 把結果寫在最後一條回覆裡，行程直接退出。
 4. **拿不準才問你。** 碰到刪資料、重啟服務、花錢、對外發訊息這類事，核心通過飛書或桌面通知發一張卡片給你。等你回覆期間，它不佔後台行程，也不消耗 Token。
-5. **點一下，接著幹。** 你選完，它接上原來的對話，把剩下的活幹完。
+5. **點一下，接著做。** 你選完，它接上原來的對話，把剩下的活做完。
 
 能自己搞定的事走圖上方的自動閉環：直接辦完，或者約個時間（比如半小時後）再醒來復查，全程不打擾你。
 
@@ -73,7 +73,7 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
 
 ### 寫一份規則（`rules.json`）
 
-不需要寫膠水程式碼。開啟 `~/.agent-autoloop/rules.json`，在 `rules` 裡寫清楚**什麼事、交給誰、在哪個目錄幹**。`to` 填 `agents` 裡已有的名字。比如每天早上 9 點寫早報：
+不需要寫膠水程式碼。開啟 `~/.agent-autoloop/rules.json`，在 `rules` 裡寫清楚**什麼事、交給誰、在哪個目錄做**。`to` 填 `agents` 裡已有的名字。比如每天早上 9 點寫早報：
 
 ```json
 {
@@ -121,7 +121,7 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
 ```
 ````
 
-除了提問（`ask`），還能發通知（`notice`）、關閉已解決的卡片（`resolve`）、預約複查（`later`）和觸發新事件（`events`）。通告不需要回答，但結案時可以順手寫一句處理說明，這句話會留在卡片上；只是告訴一聲的通告標成 `fyi`，不帶按鈕。萬一 JSON 寫錯了，中控台只讓它在原會話裡重寫最後這段回覆，不會把已經幹完的業務重做一遍；重寫也失敗時，保留原結論並通知你回條沒有生效（通用命令沒有會話，直接走這一步）。接著舊會話跑也一樣：會話接不上才開新的；接上了、幹到一半斷了，就算沒跑成，過幾分鐘回到原會話重試，不開新會話重做。同一事項的新事件預設開新會話；規則寫 `"resume": true` 就接著上一輪的會話。
+除了提問（`ask`），還能發通知（`notice`）、關閉已解決的卡片（`resolve`）、預約複查（`later`）和觸發新事件（`events`）。通告不需要回答，但結案時可以順手寫一句處理說明，這句話會留在卡片上；只是告訴一聲的通告標成 `fyi`，不帶按鈕。萬一 JSON 寫錯了，中控台只讓它在原會話裡重寫最後這段回覆，不會把已經做完的業務重做一遍；重寫也失敗時，保留原結論並通知你回條沒有生效（通用命令沒有會話，直接走這一步）。接著舊會話跑也一樣：會話接不上才開新的；接上了、做到一半斷了，就算沒跑成，過幾分鐘回到原會話重試，不開新會話重做。同一事項的新事件預設開新會話；規則寫 `"resume": true` 就接著上一輪的會話。
 
 ## 拿來即用的場景範本
 
@@ -150,7 +150,7 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
 | 方向 | 內建 | 設定 |
 |---|---|---|
 | **事件**：怎麼發現新活 | [GitHub Webhook](plugins/github/source.ts)、[GitLab Webhook](plugins/gitlab/source.ts)、[HTTP 介面](docs/protocol.zh-TW.md#來源把世界變成事件)、[定時規則](skills/agent-autoloop/SKILL.zh-TW.md#改規則)、[Issue 輪詢腳本](examples/watch-github-issues.sh) | [說明](skills/agent-autoloop/SKILL.zh-TW.md#接一個事件外掛) |
-| **Agent**：誰來幹活 | [Claude Code](plugins/claude/agent.ts)、[Codex](plugins/codex/agent.ts)、[ACP](plugins/acp/agent.ts)、[DeepSeek Harness](plugins/dsh/agent.ts)、[通用命令](plugins/command/agent.ts) | [說明](skills/agent-autoloop/SKILL.zh-TW.md#接一個-agent) |
+| **Agent**：誰來做事 | [Claude Code](plugins/claude/agent.ts)、[Codex](plugins/codex/agent.ts)、[ACP](plugins/acp/agent.ts)、[DeepSeek Harness](plugins/dsh/agent.ts)、[通用命令](plugins/command/agent.ts) | [說明](skills/agent-autoloop/SKILL.zh-TW.md#接一個-agent) |
 | **通道**：去哪找你拍板 | [桌面通知](plugins/desktop/channel.ts)（預設開啟）、[Telegram](plugins/telegram/channel.ts)、[飛書](plugins/feishu/channel.ts)、[釘釘 / 企微 / Slack / Discord](plugins/webhook/templates.ts) | [說明](skills/agent-autoloop/SKILL.zh-TW.md#接一個通道) |
 | **交付**：把 CI/CD 也做成外掛 | [`delivery`](plugins/delivery/delivery.ts) | [說明](skills/agent-autoloop/SKILL.zh-TW.md#交付流水線) |
 
@@ -175,7 +175,7 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
 
 核心約 1650 行程式碼、零執行時依賴。它不讀系統時鐘、不用隨機數、不向外發請求，外掛主動連進來，帳號憑證留在各自的外掛裡；同樣的輸入永遠得出同樣的結果。它把四個計算機領域的成熟做法用到了命令列 Agent 上：
 
-- **掛起零消耗**：等你拍板時行程直接退出，等待狀態存在資料庫裡，Agent 不用一直掛著。你三天沒回，這三天就沒有 Agent 行程在跑、不花 Token，只有很輕的中控台在後台等著；你一回答，它接著原來的對話繼續幹。
+- **掛起零消耗**：等你拍板時行程直接退出，等待狀態存在資料庫裡，Agent 不用一直掛著。你三天沒回，這三天就沒有 Agent 行程在跑、不花 Token，只有很輕的中控台在後台等著；你一回答，它接著原來的對話繼續做。
 - **事件溯源**：所有狀態都從一條只追加的日誌算出來，日誌和索引在同一個交易裡寫進磁碟，寫完才應答。行程被強殺，已經確認的事不丟（整機斷電沒有單獨測過）；任何一輪為什麼跑、結果是什麼，一條命令就能查清；資料格式變了就從日誌重建，不用寫遷移腳本。
 - **指令資料分離**：思路和 SQL 參數化一樣。Issue 的標題和正文等外部文字只作為資料放進檔案，不拼進提示詞，提示詞裡只有校驗過字元的型別、編號和連結；用哪個 Agent、在哪個目錄、什麼權限，只由你本機的規則決定，事件裡帶 `cwd`、`agent`、`access` 欄位會被直接拒收。
 - **跳數熔斷**：思路和網路包的 TTL 一樣。Agent 交回的事件會再派給 Agent，層數一路累加，經過人工提問和定時複查也不清零，Agent 自己改不了；超過 8 層就只記錄、不再派活，並行一張卡片告訴你。
