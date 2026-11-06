@@ -94,6 +94,8 @@ On one computer, a single command runs all three in one process. They still use 
 }
 ```
 
+`cwd` is interpreted by the worker computer. It can be an absolute Unix path, a Windows drive-letter or UNC path, or a home-directory path starting with `~/` or `~\`. The hub and worker computer can use different operating systems. Accepting Windows paths is a compatible extension. Existing `/v1`, rule, and plugin usage stays the same.
+
 `language` sets the language of the hub's own text: cards, errors, CLI output, and card pages. It is also sent to the worker in each round's Job, so the agent uses that language for conclusions and cards. Cards carry it too, so channels use it for their own text. When omitted, it is Simplified Chinese, as before. Existing cards in the log keep their original text. They are not rewritten. `agent-autoloop init --language zh-TW` (or the `AGENT_AUTOLOOP_LANGUAGE` environment variable) sets it in a new `rules.json`. For a new installation through the install command, the computer's `LANG` decides: `zh_TW`, `zh_HK`, and `zh_MO` select Traditional Chinese, other Chinese locales select Simplified Chinese, and all others select English. Older plugins and clients can ignore this unknown field.
 
 `elsewhere` lists scheduled tasks run somewhere else. The hub does not start them; it only lists them in `agent-autoloop status`. They use `POST /v1/tell` when they need to tell you something. Tasks with `cwd` (and either `skill` or `prompt`) can also ask you questions. Their cards have options. After you answer, the hub wakes `to`, as it would for a rule's round, and continues in `cwd` following `skill` and `prompt`. The group is the task name, with one round at a time. It does not resume the scheduled task's own session. If the rules are invalid, file changes do not take effect. The previous rules keep running, and a card tells you what is wrong.
@@ -153,7 +155,7 @@ GET /v1/work?claim=<这次领活的编号>&wait=50&running=7,8&capacity=1    Aut
 - When there is no work, wait up to `wait` seconds. Return as soon as new work arrives. `running` lists the rounds currently running and also acts as a heartbeat. `capacity=0` checks in without claiming work.
 - While holding work, the worker can ask for work and cancellations every second. Heartbeats enter the log at most once per minute, as one record regardless of the number of running rounds. Channel card polls work the same way. This means `/v1/state`'s `seenAt` can be less than a minute behind the last contact, and “not reported for 5 minutes” or “not connected for 10 minutes” may be judged less than a minute early. `online` allows for this minute: a worker counts as online for 3 minutes after the record.
 - If the response is lost, retry with the same `claim` to get the same job.
-- `cancel` lists rounds to stop. The worker first sends a stop signal to the entire process group. If any process is still running after 10 seconds, it kills the group. Only after confirming there are no live processes in the group does it submit `outcome: "cancelled"` and release the item. Restarting the worker during stopping continues this step. A `failed` result from a round being stopped also counts as stopped, with no retry.
+- `cancel` lists rounds to stop. On Unix, the worker first sends a stop signal to the entire process group. If any process is still running after 10 seconds, it kills the group. On Windows, each round runs in a separate Job Object, and stopping ends the entire child process tree. Only after confirming the processes have stopped does it submit `outcome: "cancelled"` and release the item. Restarting the worker during stopping continues this step. A `failed` result from a round being stopped also counts as stopped, with no retry.
 
 ```jsonc
 // Job: everything for one round. The token is valid only for this attempt of this round.
@@ -275,7 +277,7 @@ A minimal channel takes only a dozen or so lines: claim a card, send its text an
 
 ```
 GET  /v1/state              Authorization: Bearer <本人的密钥>
-→ 200 { "totals", "cards", "recentCards", "agents", "channels", "sources", "lines", "elsewhere", "runs", "nextBefore", "hasMore", "unrouted", "spending", "now", "timezone", "language" }
+→ 200 { "totals", "cards", "recentCards", "agents", "channels", "sources", "lines", "elsewhere", "runs", "nextBefore", "hasMore", "unrouted", "spending", "timers", "now", "timezone", "language" }
 
 POST /v1/cards/56/answer    { "choice": 1 } or { "text": "Another idea" }
 POST /v1/cards/56/resolve   { "reason": "No decision needed, because …" }
@@ -316,6 +318,8 @@ CLI commands: `agent-autoloop pause <规则> [--reason 原因] [--until 时间]`
 `agent-autoloop check [文件]` only reads the file and validates rules. It does not open the hub database or load the file into the hub. Without a filename, it checks `rules.json`. You can validate a draft before replacing the live file. `/v1/state` returns the latest 60 rounds at a time. Use `?before=<nextBefore>` for earlier ones.
 
 `/v1/state`'s `spending.today` and `spending.week` are independent of pagination. They sum by completion time for today in the rules' time zone and the past 7 × 24 hours. Each contains `rounds`, `tokens`, `cost`, `missingTokens`, and `missingCost`. The last two count rounds that did not report the corresponding usage. Rounds cancelled before they ever started are excluded.
+
+The first page also returns `timers` that are not yet due. Each contains `rule`, `lane`, `key`, `about`, and `at`. This field is empty on history pages. The owner's client can use it to distinguish items waiting normally for a follow-up check from items with no further action planned.
 
 Installation and uninstallation do not change the HTTP protocol. `agent-autoloop --version` shows the version and commit. After confirmation, `agent-autoloop uninstall` removes its program, links, and services, and always keeps rules, keys, and records. `--yes` only skips confirmation.
 
@@ -409,7 +413,7 @@ Webhook channels use `use: "webhook"`, `url`, and `platform` in `config.json`. T
 
 The `telegram` channel uses the Telegram Bot API. `sendMessage` sends plain text, with no `parse_mode` so text written by others cannot become formatting, and one button row per option. A button's `callback_data` is `卡片:选项`. Card updates use `editMessageText` on the original message, with buttons removed from finished cards. Telegram reporting unchanged content counts as delivery. `ref` is `chat:消息编号`, and `by` is the clicking user's ID. Clicks are received through `getUpdates` long polling, requesting only `callback_query`. Including the processed ID in the next request acknowledges it. Every click gets `answerCallbackQuery` telling the person whether it was recorded. Cards over 4096 characters report failure without truncation. Telegram does not support idempotency keys, so a message may be resent if sending succeeds but its report is lost. Reference: [Bot API](https://core.telegram.org/bots/api).
 
-The `desktop` channel is enabled by default for new installations. It uses `osascript` on macOS and `notify-send` on Linux. The notification title is “An agent has a question for you”. Its body is the card title and “Run agent-autoloop status to view”. Text is passed as arguments after `--`, never interpolated into the script. Without a graphical session, it does not call the notification program. It reports `skipped-<卡片编号>` and does not keep interrupting you. Cards can still be viewed and answered through the CLI. If a graphical session exists but the notification command is missing or fails, it reports `failed` and the hub schedules a retry. Card updates are only reported, without another pop-up.
+The `desktop` channel is enabled by default for new installations. It uses `osascript` on macOS, `notify-send` on Linux, and PowerShell system tray notifications on Windows. The notification title is “An agent has a question for you”. Its body is the card title and “Run agent-autoloop status to view”. On Unix, text is passed as arguments after `--`. On Windows, JSON data is encoded and passed to a fixed script for decoding. The text is not executed as PowerShell. Without a graphical session, it does not call the notification program. It reports `skipped-<卡片编号>` and does not keep interrupting you. Cards can still be viewed and answered through the CLI. If a graphical session exists but the notification command is missing or fails, it reports `failed` and the hub schedules a retry. Card updates are only reported, without another pop-up.
 
 `examples/worker.sh` and `examples/channel.sh` use only shell built-ins, curl, and jq. Set `AGENT_AUTOLOOP_URL` and `AGENT_AUTOLOOP_KEY` before running them. `AGENT_AUTOLOOP_ONCE=1` claims only once. The worker example submits the JSON in `AGENT_AUTOLOOP_RECEIPT`, defaulting to completion. The channel example prints the card to the terminal, then reports delivery. These demonstrate short tasks and are unsuitable for long ones. For long tasks, use the heartbeats, stopping, and recovery in `worker/`. `tests/examples.test.ts` actually runs both scripts against a temporary hub that passes protocol conformance checks, covering questions, delivery, answers, continuation, and invalid keys.
 
@@ -424,6 +428,8 @@ The browser handoff template has the main task invoke an installed entry point w
 Monitoring and Feishu summary scripts are verified with local mock HTTP and a fake Feishu CLI. They do not access real business data or send real messages. Public examples contain no internal addresses, accounts, or business records. Do not commit the data you substitute into the repository.
 
 ## Structure and measurements
+
+The host shell supports Windows, macOS, and Linux. The kernel does not distinguish operating systems. Windows uses `install.ps1` for installation and a scheduled task in Task Scheduler that starts after the current user signs in to keep the hub running. Each round has a separate Node supervisor process that saves output and the exit code. PowerShell creates a Job Object to manage descendants. After a restart, the worker reads the existing records and continues checking. Windows data directories use ACLs. Unix keeps permission modes, login shells, process groups, and launchd/systemd.
 
 An append-only fact log is the source of business state. Views can be rebuilt, and replay does not rerun rules. cron, later, retries, leases, and offline checks share a deadline table. The shell schedules only the next deadline's timer. It is recalculated only for an input that changed something or when a deadline wakes it. Inputs that change nothing, such as held-back heartbeats, neither read the queue nor write facts. Parts that change only with time each have their own deadline and are recalculated when the timer fires. The API is HTTP + JSON. The dedicated CLI, MCP, sources, workers, and channels all use the same endpoints.
 
@@ -512,4 +518,4 @@ Internal code, undocumented fields, and prompt text do not count. Adding fields 
 
 `/v1` is counted separately. It changes only when the HTTP API is incompatible; software version 2.0 does not mean protocol `/v2`. Published versions never change. If something is wrong, release the next number.
 
-Release a completed batch of changes that day. Release fixes for crashes, data loss, security problems, or installation failures that day. Release the rest every Tuesday. Documentation-, test-, or CI-only changes do not get a release. Large changes can have a prerelease first (`v1.2.0-rc.1`); installation and `update` do not install it.
+Release routine changes at most once a day. Fixes for crashes, data loss, security problems, or installation failures can be released at any time. Documentation-, test-, or CI-only changes do not get a release. Large changes can have a prerelease first (`v1.2.0-rc.1`); installation and `update` do not install it.

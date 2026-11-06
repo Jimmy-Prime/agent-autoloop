@@ -9,6 +9,8 @@ import { hubClient } from "../protocol/client.ts";
 import { parseRules } from "../protocol/rules.ts";
 import { CONFIG_FILE, readConfig, writeConfig, type Config } from "../host/config.ts";
 import { HOME, RULES_FILE } from "../host/home.ts";
+import { psQuote } from "../host/command.ts";
+import { privateDirectory } from "../host/files.ts";
 import { installService, removeService, restartService, serviceRunning, systemUnit } from "../host/service.ts";
 import { versionLine } from "../host/version.ts";
 import { spendLine } from "./spend.ts";
@@ -227,12 +229,20 @@ function linkSkill() {
     const link = path.join(homedir(), agent, "skills", "agent-autoloop");
     if (lstatSync(link, { throwIfNoEntry: false })) continue;
     mkdirSync(path.dirname(link), { recursive: true });
-    symlinkSync(path.join(ROOT, "skills", "agent-autoloop"), link);
+    symlinkSync(path.join(ROOT, "skills", "agent-autoloop"), link, process.platform === "win32" ? "junction" : "dir");
   }
 }
 
 /** What to type to run this program: its name if that's what a shell finds, otherwise where it is. */
 function howToRun() {
+  if (process.platform === "win32") {
+    const found = spawnSync("where.exe", ["agent-autoloop"], { encoding: "utf8", windowsHide: true })
+      .stdout?.trim()
+      .split(/\r?\n/)[0];
+    if (found && realpathSync(found) === realpathSync(path.join(ROOT, "bin", "agent-autoloop.cmd")))
+      return "agent-autoloop";
+    return `& ${psQuote(process.execPath)} ${psQuote(PROGRAM)}`;
+  }
   const found = spawnSync("/bin/sh", ["-c", "command -v agent-autoloop"], { encoding: "utf8" }).stdout.trim();
   if (found && realpathSync(found) === realpathSync(PROGRAM)) return "agent-autoloop";
   return /\s/.test(PROGRAM) ? `'${PROGRAM}'` : PROGRAM;
@@ -278,7 +288,7 @@ async function init(args: string[]) {
   const language = text(named.language) ?? process.env.AGENT_AUTOLOOP_LANGUAGE;
   if (language !== undefined && !isLanguage(language)) return fail(t`--language 要是 zh-CN、zh-TW 或 en：${language}`);
   speak(language ?? "zh-CN");
-  mkdirSync(HOME, { recursive: true, mode: 0o700 });
+  privateDirectory(HOME);
   mkdirSync(path.join(HOME, "try"), { recursive: true });
   const hostName = hostname()
     .toLowerCase()

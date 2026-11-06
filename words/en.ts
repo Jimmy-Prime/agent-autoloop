@@ -156,6 +156,8 @@ export default {
   不确定: "Uncertain",
   不能为空: "must not be empty",
   不能冒充: "Cannot impersonate another source",
+  "不能直接运行 {0}：请在 command 写可执行文件，或用 node 运行脚本。":
+    "Can’t run {0} directly: put an executable in command, or run the script with node.",
   "不认识的参数：{0}\n\n{1}": "Unknown argument: {0}\n\n{1}",
   "不认识的字段：{0}": "Unknown field: {0}",
   "不认识的输入：{0}": "Unknown input: {0}",
@@ -450,11 +452,12 @@ export default {
   要是一个对象: "must be an object",
   要是事件类型的列表: "must be a list of event types",
   "要是事件类型的列表，可以用 x.* 或 *": "must be a list of event types; x.* or * is allowed",
-  "要是以 ~/ 或 / 开头的目录": "must be a directory starting with ~/ or /",
   要是命令行的列表: "must be a list of command arguments",
   要是文字的列表: "must be a list of strings",
   要是正整数: "must be a positive integer",
   "要是正整数（分钟）": "must be a positive integer (minutes)",
+  "要是绝对目录（如 ~/code、/srv/app、C:\\code 或 \\\\服务器\\共享目录）":
+    "must be an absolute folder (such as ~/code, /srv/app, C:\\code or \\\\server\\share)",
   要是通道编号的列表: "must be a list of channel IDs",
   "要有正确的 key 和 text，接单程序还要写 task，text 最多 20000 字；问你的写 task 和 ask":
     "Provide valid key and text. Workers also need task. text is limited to 20000 characters. To ask you a question, provide task and ask.",

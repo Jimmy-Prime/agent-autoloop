@@ -5,6 +5,7 @@
 // otherwise, so they're given every time; nobody is there to approve anything, so a call that needs it is refused rather than
 // left waiting. It has no desktop session to open.
 import { execFileSync } from "node:child_process";
+import { commandLine } from "../../host/command.ts";
 import { findProgram, tail, type Adapter, type Reading, type Usage } from "../../worker/agents.ts";
 import { addUsage } from "../../protocol/validate.ts";
 import { tagIn } from "../../words/words.ts";
@@ -85,7 +86,7 @@ export default {
   },
   check() {
     try {
-      const help = execFileSync(findProgram("dsh"), ["headless", "--help"], {
+      const help = execFileSync(...commandLine([findProgram("dsh"), "headless", "--help"]), {
         encoding: "utf8",
         timeout: 20_000,
         stdio: ["ignore", "pipe", "pipe"],

@@ -101,6 +101,9 @@ export function stateOf(now: number, before: number | undefined, rules: Rules, {
   const counts = all<Row>(COUNTS, [iso(dayStart(now, rules.timezone))]);
   const openCards = all<Row>("SELECT * FROM cards WHERE state = 'open' ORDER BY id DESC");
   const recentCards = all<Row>("SELECT * FROM cards WHERE state <> 'open' ORDER BY id DESC LIMIT 20");
+  const timers = before
+    ? []
+    : all<Row>("SELECT rule, lane, key, about, at FROM timers WHERE event_id IS NULL ORDER BY at");
   const older = before ? "WHERE id < ?" : "";
   const page = all<Row>(
     `SELECT * FROM runs ${older} ORDER BY id DESC LIMIT ?`,
@@ -129,6 +132,7 @@ export function stateOf(now: number, before: number | undefined, rules: Rules, {
     totals: { ...tally(counts), attention: openCards.length },
     cards: openCards.map((card) => view(card)),
     recentCards: recentCards.map((card) => view(card)),
+    timers: timers.map(({ rule, lane, key, about, at }) => ({ rule, lane, key, about, at })),
     sources: Object.entries(rules.sources).map(([id, { name }]) => {
       const events = all<Row>("SELECT COUNT(*) AS n FROM events WHERE source = ?", [id])[0].n as number;
       return { id, name, events };

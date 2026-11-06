@@ -8,13 +8,30 @@
 
 ## 安裝
 
-支援 macOS、Linux。Windows 還不支援：上游正在開發，進度見上游的 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)，現在還不能直接裝。在 WSL2 裡按 Linux 安裝能跑通（有使用者實測過），要知道這幾件事：系統服務要發行版開著 systemd（`/etc/wsl.conf` 裡 `systemd=true`，沒開就加 `--no-service`，自己執行 `agent-autoloop up`），預設也不會在沒人登入時啟動，要的話執行 `loginctl enable-linger`；桌面通知到不了 Windows 桌面，用 `agent-autoloop status` 看卡片，或者接飛書等通道；用 `command` 接的 Agent 不上報用量，Token 和費用顯示“沒上報”；WSL2 本身要佔 1GB 左右記憶體。
+支援原生 Windows、macOS 和 Linux。需要 Node.js 24 或更新、Git，以及一個已經登入的命令列 Agent；macOS/Linux 還需要 curl。Windows 使用系統自帶的 PowerShell 5.1 和任務計劃程式。
 
-需要 Node.js 24 或更新、Git、curl，以及一個已經登入的命令列 Agent。
+Windows PowerShell：
+
+```powershell
+irm https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.ps1 | iex
+```
+
+預設安裝在 `$env:USERPROFILE\.agent-autoloop`，命令目錄加入當前行程及使用者 PATH。Windows 服務在本人登入後啟動，登出後停止；通過 SSH 管理時也可用 `service install`，任務會在 Windows 已登入的會話中執行；Codex 0.167 的原生沙箱在 OpenSSH 會話中會出現 runner pipe-in 超時，本機登入會話正常，見 [Codex 已知問題](https://github.com/openai/codex/issues/37722)。CI 或普通命令測試用 `--no-service`，再執行安裝器印出的完整命令啟動 `up`。桌面通知只在同一登入會話顯示。
+
+本地倉庫安裝示例：
+
+```powershell
+$env:AGENT_AUTOLOOP_REPO = 'C:\code\agent-autoloop'
+& 'C:\code\agent-autoloop\install.ps1' --agent codex --no-service
+```
+
+系統不允許執行本地腳本時，可僅為這一條命令使用 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\code\agent-autoloop\install.ps1 --agent codex --no-service`，不修改整體執行策略。安裝其他參數與下面的 macOS/Linux 相同。
+
+WSL2 仍按 Linux 安裝；常駐服務需要發行版開啟 systemd，沒開則加 `--no-service`。WSL2 的桌面通知不會發送到 Windows 桌面。
 
 先檢查 `node --version`。Homebrew 的 `node@24` 預設不進 PATH，裝好後還要執行 `export PATH="$(brew --prefix node@24)/bin:$PATH"`；需要長期生效時再寫入使用者的 shell 設定。不要替使用者登入，也不要讀取或複製登入憑證。
 
-本倉庫已公開，安裝腳本和程式碼都可匿名下載，不需要 GitHub 帳號、登入或 GitHub CLI（`gh`）。下面的命令安裝並啟用登入後常駐服務：
+本倉庫已公開，安裝腳本和程式碼都可匿名下載，不需要 GitHub 帳號、登入或 GitHub CLI（`gh`）。下面的 macOS/Linux 命令安裝並啟用登入後常駐服務：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
@@ -22,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/i
 
 GitHub Issue 輪詢和 PR 交付等功能另需已登入的 `gh`，按對應場景說明設定；執行 Agent 也仍需該 Agent 自己的登入或授權。
 
-安裝和 `agent-autoloop update` 都裝最新的 Release，那是通過了全部檢查的版本，`main` 上還沒釋出的改動要等下一個 Release。已經裝了上游 KKKKhazix/agent-autoloop 正式版的，直接執行上面的安裝命令，就會改成跟著這個 fork 的 Release，規則、金鑰和記錄都保留。
+安裝和 `agent-autoloop update` 都裝最新的 Release，那是通過了全部檢查的版本，`taiwan` 分支上還沒釋出的改動要等下一個 Release。已經裝了上游 KKKKhazix/agent-autoloop 正式版的，直接執行上面的安裝命令，就會改成跟著這個 fork 的 Release，規則、金鑰和記錄都保留。
 
 使用者指定本地倉庫時，用該目錄的安裝腳本，並把 `AGENT_AUTOLOOP_REPO` 設成它的絕對路徑。不要下載 GitHub 的舊腳本，也不要用未提交的檔案冒充已安裝版本；這時安裝器克隆的是本地倉庫的 HEAD，`update` 也跟著那個倉庫走，不看 Release。已經裝過時這個變數不起作用，還跟著原來的來源走；要換來源，先執行 `agent-autoloop uninstall` 再裝。
 
@@ -34,9 +51,9 @@ AGENT_AUTOLOOP_REPO=/path/to/agent-autoloop sh /path/to/agent-autoloop/install.s
 
 `--agent claude` 選擇 Claude Code；只有其他 CLI 時加 `--command 'hermes chat -Q -q {prompt}'`。不指定時會檢測本機安裝的 Agent，第一種作為試跑對象。
 
-程式裝進 `~/.agent-autoloop/app`，設定和記錄留在 `~/.agent-autoloop`。預設開啟桌面通知；沒有圖形會話時安靜跳過，問題仍能用 `agent-autoloop status` 檢視。命令優先放在 PATH 中的 `~/.local/bin`，否則選 PATH 裡第一個可寫目錄，不用 sudo、不覆蓋其他程式；沒有位置時使用安裝器印出的完整路徑。
+程式裝進 `~/.agent-autoloop/app`，設定和記錄留在 `~/.agent-autoloop`。預設開啟桌面通知；沒有圖形會話時安靜跳過，問題仍能用 `agent-autoloop status` 檢視。macOS/Linux 的命令優先放在 PATH 中的 `~/.local/bin`，否則選 PATH 裡第一個可寫目錄，不用 sudo、不覆蓋其他程式；沒有位置時使用安裝器印出的完整路徑。
 
-安裝器和中控台啟動時都會把資料目錄設為 `0700`，包括已有目錄，阻止其他系統使用者讀取資料庫、事件和執行輸出。升級後同步重啟中控台與接單程式；新版 `status` 使用中控台提供的費用匯總。
+安裝器和中控台啟動時在 macOS/Linux 把資料目錄設為 `0700`，Windows 則用 ACL 只允許本人和 SYSTEM 訪問，包括已有目錄，阻止其他系統使用者讀取資料庫、事件和執行輸出。Codex 的 Windows 專用沙箱帳號僅額外獲得每輪任務資料 `context.json` 的讀權限，主金鑰和輪次 token 仍不開放。升級後同步重啟中控台與接單程式；新版 `status` 使用中控台提供的費用匯總。
 
 升級時若投影格式有變化，會自動從舊日誌逐條重建，歷史多時首次啟動需要等待；之後正常啟動直接複用投影。原日誌和已有卡片連結保留，不需要手動遷移。
 
@@ -54,7 +71,7 @@ agent-autoloop up
 
 `up` 會一直執行。在 Agent 的命令工具裡保留它返回的執行中會話，再用另一條命令完成驗證；不要用 `nohup … &` 代替，命令工具可能在退出時清理後台行程。看到監聽地址後再執行驗證命令；啟動失敗就先處理該會話裡的錯誤。
 
-PATH 沒有命令時，把 `agent-autoloop` 換成安裝器印出的完整路徑。臨時測試使用假的 `osascript`、`notify-send`，不要傳送真實訊息；不要給已線上的飛書應用再開監聽。
+PATH 沒有命令時，把 `agent-autoloop` 換成安裝器印出的完整路徑。臨時測試使用假的通知程式或通道，Windows 也不要彈真實通知；不要給已線上的飛書應用再開監聽。
 
 ## 驗證
 
@@ -101,4 +118,4 @@ agent-autoloop uninstall
 - [外掛](docs/plugins.zh-TW.md)：三個可執行的最小例子。
 - [安全邊界](SECURITY.zh-TW.md)：金鑰、執行權限和交付審查。
 
-開發檢查用 `npm run test:quick`（改了 `kernel/`、`protocol/`、`sim/` 時用 `npm test`）、`npm run typecheck`、`npm run format:check`，完整故障檢查和效能實測用 `npm run test:nightly`。備份和恢復見[設定手冊](skills/agent-autoloop/SKILL.zh-TW.md#日誌與恢復)。`master.key` 壞了中控台會拒絕啟動：從備份恢復；沒有備份就刪掉它，重啟會生成新的，已發出的卡片連結和正在跑的輪次會失效。
+Windows 開發檢查用 `npm run test:windows` 與 `node scripts/install-smoke-windows.ts`。Linux/macOS 用 `npm run test:quick`（改了 `kernel/`、`protocol/`、`sim/` 時用 `npm test`）、`npm run typecheck`、`npm run format:check`，完整故障檢查和效能實測用 `npm run test:nightly`。備份和恢復見[設定手冊](skills/agent-autoloop/SKILL.zh-TW.md#日誌與恢復)。`master.key` 壞了中控台會拒絕啟動：從備份恢復；沒有備份就刪掉它，重啟會生成新的，已發出的卡片連結和正在跑的輪次會失效。

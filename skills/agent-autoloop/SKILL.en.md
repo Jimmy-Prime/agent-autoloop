@@ -68,6 +68,8 @@ An exit code other than 0 counts as “没跑成” (`FAILED`). For session resu
 
 A third-party repository puts `agent.ts`, `channel.ts`, or `source.ts` at its root. Install it with `agent-autoloop add <git URL>` into `~/.agent-autoloop/plugins/<repository name>`. The repository name in lowercase is the plugin name. The rule's `use` is that name. Only lowercase letters, digits, and `-` are allowed. `add` rejects a name that does not qualify. A local plugin with the same name takes priority over a built-in one. It does not update on its own. A plugin is trusted code. Read it before you install it.
 
+On Windows, `cwd` can be `C:/code/project`, JSON-escaped `C:\\code\\project`, a UNC path, or `~/code/project`. The worker computer interprets it. `command` supports executables, PowerShell scripts, and npm's JS entry-point wrappers. For other `.bat`/`.cmd` files, use an executable or `node script.js` instead. Windows finds programs through PATH and does not load a Unix login shell.
+
 How long a round may run is `timeout`, in minutes. The default is 180.
 
 ACP uses `use: "acp"` and `command: ["the ACP server"]`. It supports v1 session create and resume, text, and one-time permission requests. Sign in with that agent's own CLI first. `access` covers only operations the agent comes and asks about. The specification allows it to act without asking. To limit it, use its own mode (for example, write `env INITIAL_AGENT_MODE=read-only …` in `command`). `model` and `effort` have no effect. The ordinary command connection, and what has actually been tested, are in `README.en.md`.
@@ -82,7 +84,7 @@ Web tasks use the browser tools the agent already has configured. When a dedicat
 
 Configuration is in two places. `channels` in `rules.json` registers them (`answerers` is who can answer; if it is left out, anyone in the channel can answer, and `doctor` reminds you). `channels` in `config.json` holds keys and options. `agent-autoloop key new channel <name>` gets a key (ask the user first). After you change `config.json`, restart with `agent-autoloop service install`. By default every card goes to every channel. To send one rule's cards only to some channels, write `"channels": ["feishu"]` on that rule.
 
-**Desktop notifications.** A newly installed hub has them on (`plugins/desktop/channel.ts`), with one `desktop` in each of the two places. The first time a card is sent, macOS uses `osascript` and Linux uses `notify-send` to show one notification. The title is “Agent 问你一个问题” (“An agent has a question for you”). The body is the card title plus “运行 agent-autoloop status 查看” (“Run agent-autoloop status to check”). You cannot answer on the notification. When there is no graphical session it is skipped quietly, and the question is still there. If the notification command fails, the failure is reported, and the hub does not exit. You can leave it in place after connecting another channel. If you do not want it, delete `desktop` in both places, then restart. A hub installed earlier does not gain it on its own.
+**Desktop notifications.** A newly installed hub has them on (`plugins/desktop/channel.ts`), with one `desktop` in each of the two places. The first time a card is sent, macOS uses `osascript`, Linux uses `notify-send`, and Windows uses PowerShell system tray notifications to show one notification. The title is “Agent 问你一个问题” (“An agent has a question for you”). The body is the card title plus “运行 agent-autoloop status 查看” (“Run agent-autoloop status to check”). You cannot answer on the notification. When there is no graphical session it is skipped quietly, and the question is still there. If the notification command fails, the failure is reported, and the hub does not exit. You can leave it in place after connecting another channel. If you do not want it, delete `desktop` in both places, then restart. A hub installed earlier does not gain it on its own.
 
 **Feishu.** Use the official `lark-cli`. Run `npm i -g @larksuite/cli`, then `lark-cli config init --new` to create an app (the user scans the code). In the developer console, turn on the bot capability for the app, and subscribe to card action callbacks (long connection). Then:
 
@@ -204,7 +206,9 @@ A system-level systemd unit you write yourself on the server has to use the same
 
 ## Logs and recovery
 
-Logs: on macOS, `~/.agent-autoloop/logs/up.log`. On Linux, run `journalctl --user -u agent-autoloop`.
+On Windows, Task Scheduler starts the hub after the owner signs in. When managing it over SSH, keep using this login task to run Codex and avoid its sandbox startup restrictions in OpenSSH sessions (see [INSTALL.en.md](../../INSTALL.en.md)). `service install`, `service remove`, and `update` also apply. Updating restarts the hub. For installation, see [INSTALL.en.md](../../INSTALL.en.md).
+
+Logs: on Windows, `%USERPROFILE%\.agent-autoloop\logs\up.log`. On macOS, `~/.agent-autoloop/logs/up.log`. On Linux, run `journalctl --user -u agent-autoloop`.
 
 Check a plugin first against a dedicated test hub: `agent-autoloop conformance <address> --config <test credentials file>`. The file's `keys` hold the source, worker, channel, and owner keys separately. `eventType` matches the test rule. `answerer` is on the test channel's allow list. The check writes events and cards. Do not point it at the hub in use. Protocol types are in `protocol/schema.json`.
 

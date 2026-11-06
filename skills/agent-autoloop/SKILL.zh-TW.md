@@ -71,6 +71,8 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 
 第三方倉庫根目錄放 `agent.ts`、`channel.ts` 或 `source.ts`，用 `agent-autoloop add <git 地址>` 安裝到 `~/.agent-autoloop/plugins/<倉庫名>`。倉庫名轉成小寫就是外掛名，規則的 `use` 寫它；只能有小寫字母、數字和 `-`，不合要求的 `add` 會拒絕。同名本機外掛優先於內建外掛，不自動更新。外掛是可信程式碼，先讀再裝。
 
+Windows 的 `cwd` 可寫 `C:/code/project`、JSON 轉義後的 `C:\\code\\project`、UNC 路徑或 `~/code/project`，以接單電腦為準。`command` 支援執行檔、PowerShell 腳本和 npm 的 JS 入口包裝；其他 `.bat`/`.cmd` 請換成執行檔或 `node script.js`。Windows 按 PATH 找程式，不載入 Unix 登入 shell。
+
 一輪最長跑多久寫 `timeout`，單位是分鐘，預設 180。
 
 ACP 用 `use: "acp"` 和 `command: ["ACP 服務程式"]`，支援 v1 的會話新建、恢復、文字與一次性權限請求；先在該 Agent 自己的 CLI 登入。`access` 只管 Agent 主動來問的操作，規範允許它不詢問就執行，要限制得用它自己的模式（比如 `command` 裡寫 `env INITIAL_AGENT_MODE=read-only …`）；`model`、`effort` 不生效。普通命令接法與實測支援範圍見 README。
@@ -85,7 +87,7 @@ Claude 主任務要委託 Codex 操作網頁時，從 `examples/recipes/browser-
 
 設定在兩處：`rules.json` 的 `channels` 登記（`answerers` 是誰能回答，沒寫時通道里誰都能回答，`doctor` 會提醒），`config.json` 的 `channels` 寫金鑰和選項。`agent-autoloop key new channel <名字>` 拿金鑰（先問使用者）。改了 `config.json` 要 `agent-autoloop service install` 重啟。預設每張卡片發到所有通道；某條規則的卡片只想發到某幾個通道，在這條規則裡寫 `"channels": ["feishu"]`。
 
-**桌面通知**：新裝的中控台預設開著（`plugins/desktop/channel.ts`），兩處各有一個 `desktop`。卡片第一次傳送時，macOS 用 `osascript`、Linux 用 `notify-send` 彈一條通知，標題為“Agent 問你一個問題”，正文是卡片標題和“執行 agent-autoloop status 檢視”，不能在通知上回答。沒有圖形會話時安靜跳過，問題仍在；通知命令失敗時報告失敗，不會讓中控台退出。接了別的通道可以留著它；不想要就把兩處的 `desktop` 都刪掉，再重啟。以前裝的中控台不會自動加上它。
+**桌面通知**：新裝的中控台預設開著（`plugins/desktop/channel.ts`），兩處各有一個 `desktop`。卡片第一次傳送時，macOS 用 `osascript`、Linux 用 `notify-send`、Windows 用 PowerShell 系統托盤通知彈一條通知，標題為“Agent 問你一個問題”，正文是卡片標題和“執行 agent-autoloop status 檢視”，不能在通知上回答。沒有圖形會話時安靜跳過，問題仍在；通知命令失敗時報告失敗，不會讓中控台退出。接了別的通道可以留著它；不想要就把兩處的 `desktop` 都刪掉，再重啟。以前裝的中控台不會自動加上它。
 
 **飛書**：用官方的 `lark-cli`。`npm i -g @larksuite/cli`，`lark-cli config init --new` 建一個應用（使用者掃碼），在開發者後台給應用開機器人能力，並訂閱卡片回傳互動（長連線）。然後：
 
@@ -207,7 +209,9 @@ MCP 服務不區分呼叫方，都按本人記錄（`answer` 記成本人，`emi
 
 ## 日誌與恢復
 
-日誌：macOS 在 `~/.agent-autoloop/logs/up.log`，Linux 執行 `journalctl --user -u agent-autoloop`。
+Windows 用任務計劃程式在本人登入後啟動；通過 SSH 管理時仍用這個登入任務執行 Codex，避免它在 OpenSSH 會話中的沙箱啟動限制（見 `INSTALL.md`）；`service install`、`service remove`、`update` 同樣適用，更新會重啟中控台。安裝見 `INSTALL.md`。
+
+日誌：Windows 在 `%USERPROFILE%\.agent-autoloop\logs\up.log`，macOS 在 `~/.agent-autoloop/logs/up.log`，Linux 執行 `journalctl --user -u agent-autoloop`。
 
 接外掛先在專用測試中控台驗證：`agent-autoloop conformance <地址> --config <測試憑證檔案>`。檔案裡的 `keys` 分別放來源、接單程式、通道、本人金鑰；`eventType` 匹配測試規則，`answerer` 在測試通道的允許名單內。檢查會寫事件和卡片，不指向正在用的中控台。協議型別在 `protocol/schema.json`。
 

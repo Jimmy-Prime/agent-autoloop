@@ -18,15 +18,21 @@
 
 **Agent Autoloop** 是一個極輕量的自動化中控台。它把任務排程做成一個零外部依賴的**核心**，把事件來源、Agent、通知通道，甚至程式碼上線流水線全部拆成可隨時插拔的**外掛**。
 
-- **一台電腦、一條命令就能跑。** 裝在你的 Mac 或 Linux 上，不用買雲伺服器，也不用開放公網埠。
+- **一台電腦、一條命令就能跑。** 裝在你的 Windows、Mac 或 Linux 上，不用買雲伺服器，也不用開放公網埠。
 - **一行設定接新 Agent。** 不需要 SDK，也不需要改 Agent 原始碼，能接收提示詞並印出最後一條回覆的命令列工具都能接。
 - **沒有後台介面。** 需要你拍板時把卡片推到飛書、釘釘、企微、Slack、Discord 或桌面通知；想看整體進展，敲一行命令。
 
 ## 上手
 
-支援 macOS 和 Linux。執行前需要裝好 Node 24、Git、curl，以及任意一個你已經登入好的命令列 Agent，不需要 GitHub 帳號。也可以直接把[安裝說明](INSTALL.zh-TW.md)丟給你的 Agent，讓它替你裝好。
+支援 Windows、macOS 和 Linux。需要 Node 24 或更新、Git，以及一個已經登入的命令列 Agent；macOS/Linux 還需要 curl，不需要 GitHub 帳號。也可以把[安裝說明](INSTALL.zh-TW.md)交給你的 Agent。
 
-> **Windows：還不支援。** 上游正在開發，進度見上游的 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)。現在可以先用 WSL2，注意事項見 [INSTALL](INSTALL.zh-TW.md)。
+Windows PowerShell：
+
+```powershell
+irm https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.ps1 | iex
+```
+
+macOS / Linux：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
@@ -182,6 +188,8 @@ Agent 結束了這一輪，問了你一個問題。它現在不佔行程、不�
 
 ### 自己跑一遍
 
+Windows 用 `npm run test:windows` 和 `node scripts/install-smoke-windows.ts`，執行共用行為測試與原生行程、安裝檢查；Unix shell 測試仍在 Linux/macOS 上跑。
+
 在程式目錄 `~/.agent-autoloop/app` 下執行：
 
 | 驗證什麼 | 命令 |
@@ -249,7 +257,7 @@ Apple M5 Pro、24 GB、Node 24.21.0。寫入逐條提交，交易落盤後才應
 | `skills/agent-autoloop/` | 中控台的正式設定與操作手冊，安裝時也提供給 Agent 使用 |
 | `docs/` | 通訊協議、外掛開發說明與中英文架構圖 |
 | `tests/`、`sim/` | 日常行為測試，以及模擬、窮舉、強殺和變異檢查 |
-| `scripts/`、`.github/workflows/` | 效能與真機驗證、安裝冒煙腳本，以及 Linux / macOS CI |
+| `scripts/`、`.github/workflows/` | 效能與真機驗證、安裝冒煙腳本，以及 Windows / Linux / macOS CI |
 | 根目錄文件與 `install.sh` | 中英文 README、安裝說明、安全邊界、開發約定、許可證與安裝腳本 |
 
 讀程式碼可以從 `bin/agent-autoloop.ts` → `cli/main.ts` 開始，再按功能進入 `host/`、`worker/` 或 `plugins/`；核心設計先看[協議](docs/protocol.zh-TW.md)。同名檔案分屬不同層：`host/http.ts` 轉換 Node 請求，`kernel/http.ts` 定義介面行為；`protocol/rules.ts` 校驗輸入，`kernel/rules.ts` 定義規則型別和匹配。

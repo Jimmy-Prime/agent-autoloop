@@ -93,7 +93,9 @@
 }
 ```
 
-`language` 决定中台自己写的字（卡片、错误、命令行输出、卡片页面）用哪种语言，也随每一轮的 Job 交给接单程序，让 Agent 用这种语言写结论和卡片；卡片也带着它，通道自己的字照它显示。不写就是简体中文，和以前一样。日志里已有的卡片保留当时的文字，不重写。`agent-autoloop init --language zh-TW`（或环境变量 `AGENT_AUTOLOOP_LANGUAGE`）在新的 `rules.json` 里写好它；用安装命令新装时，按这台电脑的 `LANG` 选：`zh_TW`、`zh_HK`、`zh_MO` 是繁体，其他中文是简体，别的都是英文。老插件和客户端不认识这个字段，忽略即可。
+`cwd` 由接单电脑解释，可用 Unix 绝对路径、Windows 盘符或 UNC 路径、`~/` 或 `~\` 开头的家目录路径；中台与接单电脑可以用不同操作系统。接受 Windows 路径是兼容的能力扩展，原有 `/v1`、规则与插件用法不变。
+
+`language` 决定中台自己写的字（卡片、错误、命令行输出、卡片页面）用哪种语言，也随每一轮的 Job 交给接单程序，让 Agent 用这种语言写结论和卡片；卡片也带着它，通道自己的字照它显示。不写就是简体中文，和以前一样。日志里已有的卡片保留当时的文字，不重写。`agent-autoloop init --language zh-TW`（或环境变量 `AGENT_AUTOLOOP_LANGUAGE`）在新的 `rules.json` 里写好它；用安装命令新装时，macOS 和 Linux 按这台电脑的 `LANG` 选，Windows 按显示语言选：`zh_TW`、`zh_HK`、`zh_MO`（Windows 是 `zh-TW`、`zh-HK`、`zh-MO`）是繁体，其他中文是简体，别的都是英文。老插件和客户端不认识这个字段，忽略即可。
 
 `elsewhere` 是在别处定时跑的任务：中台不启动它们，只在 `agent-autoloop status` 里列出来，它们要找你时用 `POST /v1/tell`。写了 `cwd`（还要写 `skill` 或 `prompt`）的也能问你：卡片带选项，你答了，中台像规则的一轮那样叫醒 `to`，在 `cwd` 照 `skill`、`prompt` 接着做，这一轮的组就是任务名，一次一轮，不接定时任务自己的会话。规则写错了，文件改动不生效，旧规则继续跑，并推一张卡片告诉你错在哪。
 
@@ -152,7 +154,7 @@ GET /v1/work?claim=<这次领活的编号>&wait=50&running=7,8&capacity=1    Aut
 - 没活时最多等 `wait` 秒，新活一来立即返回。`running` 是手上在跑的，同时也是心跳。`capacity=0` 只报到、不领活。
 - 手上有活时可以每秒来问活、查取消。心跳最多一分钟记进日志一次，手上有几轮都只记一条；通道领卡片也一样。所以 `/v1/state` 的 `seenAt` 可能比最后一次来的时间早不到一分钟，“5 分钟没报”“10 分钟没连上”也可能因此提前不到一分钟判断；`online` 留了这一分钟的余量，记录后 3 分钟内都算在线。
 - 响应丢了，用同一个 `claim` 再来一次，拿回的是同一份活。
-- `cancel` 是要停掉的。接单程序先向整个进程组发停止信号，10 秒后仍有进程运行就强制结束；确认组内没有活进程后才交 `outcome: "cancelled"`，这个事项才放开。停止期间重启接单程序也继续这一步。要停的这一轮交回 `failed` 也算停了，不再重试。
+- `cancel` 是要停掉的。Unix 接单程序先向整个进程组发停止信号，10 秒后仍有进程运行就强制结束；Windows 每轮运行在独立 Job Object 中，停止时结束整个子进程树。确认进程已停止后才交 `outcome: "cancelled"`，这个事项才放开。停止期间重启接单程序也继续这一步。要停的这一轮交回 `failed` 也算停了，不再重试。
 
 ```jsonc
 // Job：一轮的全部。token 只对这一轮的这一次执行有效。
@@ -274,7 +276,7 @@ GET /v1/cards/next?wait=50    Authorization: Bearer <通道的密钥>
 
 ```
 GET  /v1/state              Authorization: Bearer <本人的密钥>
-→ 200 { "totals", "cards", "recentCards", "agents", "channels", "sources", "lines", "elsewhere", "runs", "nextBefore", "hasMore", "unrouted", "spending", "now", "timezone", "language" }
+→ 200 { "totals", "cards", "recentCards", "agents", "channels", "sources", "lines", "elsewhere", "runs", "nextBefore", "hasMore", "unrouted", "spending", "timers", "now", "timezone", "language" }
 
 POST /v1/cards/56/answer    { "choice": 1 } 或 { "text": "别的想法" }
 POST /v1/cards/56/resolve   { "reason": "不用决定了，因为……" }
@@ -315,6 +317,8 @@ POST /v1/rules/巡检/run        { "subject": "#12", "reason": "看一眼" }    
 `agent-autoloop check [文件]` 只读文件、校验规则，不打开中台数据库，也不把文件载入中台；不写文件名就查 `rules.json`。可以先校验一份草稿再换上去。`/v1/state` 一次给最近 60 轮，`?before=<nextBefore>` 翻更早的。
 
 `/v1/state` 的 `spending.today`、`spending.week` 独立于分页，按规则时区的今天和过去 7 × 24 小时的完成时间汇总。每项含 `rounds`、`tokens`、`cost`、`missingTokens`、`missingCost`，后两项是没报对应用量的轮数；从未开始就取消的轮次不计入。
+
+首页还会返回尚未到期的 `timers`，每项包含 `rule`、`lane`、`key`、`about` 和 `at`；翻历史页时该字段为空。本人客户端可据此区分正常等待复查与已经没有后续动作的事项。
 
 安装与卸载不改变 HTTP 协议。`agent-autoloop --version` 显示版本与提交；`agent-autoloop uninstall` 确认后移除自身程序、链接和服务，始终保留规则、密钥和记录；`--yes` 只跳过确认。
 
@@ -408,7 +412,7 @@ Webhook 通道的 `config.json` 配置使用 `use: "webhook"`、`url` 和 `platf
 
 Telegram 通道 `telegram` 用 Bot API：`sendMessage` 发纯文字（不设 `parse_mode`，别人写的字不会变成格式）和每个选项一行的按钮，按钮的 `callback_data` 是 `卡片:选项`；卡片更新用 `editMessageText` 改原消息，结束的卡片去掉按钮，Telegram 说内容没变时算送达。`ref` 是 `chat:消息编号`，`by` 是点击人的用户编号。点击靠 `getUpdates` 长轮询拿，只要 `callback_query`，下一次请求带上处理过的编号就是确认；每次点击都 `answerCallbackQuery`，告诉对方记下了没有。超过 4096 字的卡片报告失败，不截断。Telegram 不支持幂等键，发送成功但报告丢失时可能重发。核对依据：[Bot API](https://core.telegram.org/bots/api)。
 
-桌面通知 `desktop` 是新安装默认打开的通道：macOS 用 `osascript`，Linux 用 `notify-send`。通知标题是“Agent 问你一个问题”，正文是卡片标题和“运行 agent-autoloop status 查看”；文字通过 `--` 后的参数传入，不拼进脚本。没有图形会话时不调用通知程序，报告 `skipped-<卡片编号>`，不反复打扰；卡片仍可通过命令行查看和回答。有图形会话但通知命令不存在或失败时报告 `failed`，由中台安排重试。卡片更新只报告，不重复弹出。
+桌面通知 `desktop` 是新安装默认打开的通道：macOS 用 `osascript`，Linux 用 `notify-send`，Windows 用 PowerShell 的系统托盘通知。通知标题是“Agent 问你一个问题”，正文是卡片标题和“运行 agent-autoloop status 查看”；Unix 的文字通过 `--` 后的参数传入；Windows 把 JSON 数据编码后交给固定脚本解码，不把文字当 PowerShell 执行。没有图形会话时不调用通知程序，报告 `skipped-<卡片编号>`，不反复打扰；卡片仍可通过命令行查看和回答。有图形会话但通知命令不存在或失败时报告 `failed`，由中台安排重试。卡片更新只报告，不重复弹出。
 
 `examples/worker.sh` 和 `examples/channel.sh` 只用 shell 内置命令、curl、jq。设置 `AGENT_AUTOLOOP_URL`、`AGENT_AUTOLOOP_KEY` 后运行；`AGENT_AUTOLOOP_ONCE=1` 只领一次。接单示例交回 `AGENT_AUTOLOOP_RECEIPT` 中的 JSON，默认交回完成；通道示例把卡片输出到终端，再报告送达。它们是短任务示例，不适合长任务；长任务使用 `worker/` 的心跳、停止和恢复。`tests/examples.test.ts` 在通过协议一致性检查的临时中台上实际运行两个脚本，覆盖提问、送达、回答、继续和错误密钥。
 
@@ -423,6 +427,8 @@ Telegram 通道 `telegram` 用 Bot API：`sendMessage` 发纯文字（不设 `pa
 巡检和飞书摘要的脚本使用本地假 HTTP 和假飞书 CLI 验证，不调用真实业务数据、不发真消息。公开样例不含内部地址、账号或业务记录；用户替换后的资料不应提交到仓库。
 
 ## 结构与实测
+
+主机外壳支持 Windows、macOS、Linux，内核不区分操作系统。Windows 安装用 `install.ps1`，常驻用当前用户登录后的计划任务；每轮由独立 Node 监督进程保存输出和退出码，PowerShell 建立 Job Object 管住后代，接单程序重启后读原有记录继续核对。Windows 数据目录用 ACL；Unix 保留权限模式、登录 shell、进程组和 launchd/systemd。
 
 一条只追加的事实日志是业务状态的来源；视图可重建，重放不重新执行规则。cron、later、重试、租约和离线判断共用到期表，外壳只安排下一次到期的定时器。只有改了东西的输入和到期叫醒的那一次才重算它：什么都没改变的输入（比如被挡下的心跳）不读排队，也不写事实；只随时间变化的部分都有自己的到期时间，定时器到了自然重算。接口是 HTTP + JSON；专用 CLI、MCP、来源、接单程序和通道都使用同一组接口。
 
@@ -511,4 +517,4 @@ Ship 使用本引擎仓库的 `plugins/delivery/action.yml`，项目固定到发
 
 `/v1` 单独算：只有 HTTP 接口不兼容时才变，软件到 2.0 不等于协议到 `/v2`。发出去的版本不再改，有问题就发下一个号。
 
-一批改动做完当天发；崩溃、丢数据、安全问题、装不上的修复当天发；其余的每周二发。只改文档、测试、CI 的不发。大改动可以先发试用版（`v1.2.0-rc.1`），安装和 `update` 不会装到它。
+常规改动一天最多发一版；崩溃、丢数据、安全问题、装不上的修复随时发。只改文档、测试、CI 的不发。大改动可以先发试用版（`v1.2.0-rc.1`），安装和 `update` 不会装到它。

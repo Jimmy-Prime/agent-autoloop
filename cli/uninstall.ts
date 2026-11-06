@@ -6,6 +6,7 @@ import path from "node:path";
 import { HOME } from "../host/home.ts";
 import { removeService, stopUp } from "../host/service.ts";
 import { t } from "../words/words.ts";
+import { powershell, psQuote } from "../host/command.ts";
 
 const ROOT = path.join(import.meta.dirname, "..");
 
@@ -44,6 +45,11 @@ export async function uninstall(yes: boolean, ask: ((question: string) => Promis
   removeLinks();
   const installedApp = path.join(HOME, "app");
   if (existsSync(installedApp) && realpathSync(installedApp) === realpathSync(ROOT)) {
+    if (process.platform === "win32") {
+      powershell(`$old = [Environment]::GetEnvironmentVariable('Path', 'User');
+        $next = ($old -split ';' | Where-Object { $_ -ne ${psQuote(path.join(ROOT, "bin"))} }) -join ';';
+        if ($next -ne $old) { [Environment]::SetEnvironmentVariable('Path', $next, 'User') }`);
+    }
     rmSync(installedApp, { recursive: true });
   }
   console.log(existsSync(HOME) ? t`卸载好了。规则、密钥和记录还留在 ${HOME}。` : t`卸载好了。`);

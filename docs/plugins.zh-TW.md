@@ -51,6 +51,10 @@ node --disable-warning=ExperimentalWarning --test --test-name-pattern='agent-aut
 { "name": "Hello", "worker": "my-computer", "use": "hello-agent", "access": "read" }
 ```
 
+Codex 的 Windows elevated 沙箱使用專用帳號；外掛只給該帳號組增加本輪 `context.json` 的讀權限，不開放中控台目錄，也不更改帳號或沙箱模式。
+
+Windows 原生執行支援 `.exe`/`.com`、PowerShell `.ps1` 和 npm 生成的 JavaScript `.cmd` 包裝（直接執行其 JS 入口，保留中文、多行及引號）。其他 `.bat`/`.cmd` 不作為 shell 原始碼啟動，請用可執行程式或 `node script.js`。Unix 沿用登入 shell 查詢命令，Windows 用 PATH；Agent 自己也必須支援當前系統。文中的 shell、curl/jq 教程在 Unix 或 WSL 執行。
+
 只需要印出最後一條訊息時，用內建 `command` 加參數陣列即可，不必寫外掛。參數裡可以用 `{prompt}`、`{model}`、`{effort}`、`{cwd}`、`{context}`，每個參數只替換一輪，替換進去的提示詞原樣傳給程式：提示詞裡寫著 `{cwd}` 或 `$&`，到程式那邊也還是這幾個字，不會被再替換一次。執行時還有環境變數 `AGENT_AUTOLOOP_CONTEXT`（資料檔案）和 `AGENT_AUTOLOOP_RUN`（第幾輪）。
 
 DeepSeek Harness 有內建 `dsh` 外掛，規則裡寫 `use: "dsh"`，要 0.2.2 或更新，`agent-autoloop doctor` 會查。現在 npm 的 `latest` 還是舊版，要這樣裝：`npm install -g @deepseek-ai/dsh@next --allow-scripts=koffi,node-pty,@deepseek-ai/dsh-subprocess-local`。新版 npm 預設不跑依賴的安裝腳本，不放行這三個包，裝完看著正常，一跑才出錯。從舊版升上來的，0.2.2 可能讀不到 `~/.dsh/.credentials.yaml` 裡的 `refs`，報 `MISSING_CREDENTIAL`：把金鑰放進環境變數，Linux 的系統服務放 `~/.config/environment.d/*.conf`。只上報 Token，不上報費用。有使用者在 WSL2 上用 0.2.2-rc.1 和第三方 OpenAI 相容服務實測跑通了問答、用量和 `resume`。它以 `dsh headless --json` 跑一輪，從 `session` 事件拿會話編號，用 `--session-id` 續接，把 `step_end` 的用量彙總為 Token，`final` 事件才算跑完；`access` 每次都對映成 `--permission-mode`，要人批准的呼叫用 `--approval-policy never` 直接拒絕。規則裡的 `model`、`effort` 不起作用，用 DSH 自己的設定。沒有可開啟的桌面會話連結。DSH 預設把會話日誌上傳給 DeepSeek，見[它的說明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md)。

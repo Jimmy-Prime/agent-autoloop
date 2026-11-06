@@ -6,6 +6,7 @@
 import { execFile, spawn } from "node:child_process";
 import type { Card, ChannelContext } from "../../host/channels.ts";
 import { eachLine } from "../../host/lines.ts";
+import { commandLine } from "../../host/command.ts";
 import { tagIn, wordsIn } from "../../words/words.ts";
 import en from "./en.ts";
 import zhTW from "./zh-TW.ts";
@@ -100,8 +101,10 @@ export default async function feishu({ hub, options, log, signal }: ChannelConte
   const program = (options.lark as string | undefined) ?? "lark-cli";
   const lark = async (args: string[], input: string) => {
     const printed = await new Promise<string>((resolve, reject) => {
-      const child = execFile(program, args, { encoding: "utf8", timeout: 60_000, signal }, (error, stdout) =>
-        error ? reject(error) : resolve(stdout),
+      const child = execFile(
+        ...commandLine([program, ...args]),
+        { encoding: "utf8", timeout: 60_000, signal },
+        (error, stdout) => (error ? reject(error) : resolve(stdout)),
       );
       child.stdin!.on("error", reject);
       child.stdin!.end(input);
@@ -189,7 +192,7 @@ export default async function feishu({ hub, options, log, signal }: ChannelConte
   async function listen() {
     while (!signal.aborted) {
       // stdin stays open: lark-cli ends an unbounded consume when its stdin closes.
-      const consume = spawn(program, ["event", "consume", "card.action.trigger", "--as", "bot"], {
+      const consume = spawn(...commandLine([program, "event", "consume", "card.action.trigger", "--as", "bot"]), {
         stdio: ["pipe", "pipe", "pipe"],
       });
       // Unheard, this would end the whole hub. A process that never started still closes, which starts it again below.

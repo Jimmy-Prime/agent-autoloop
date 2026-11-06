@@ -5,13 +5,30 @@ The user asked you to install the Agent Autoloop hub. Install it first, then wal
 
 ## Install
 
-macOS and Linux are supported. Windows is not supported yet. Upstream is working on it. Progress is in upstream's [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17). You cannot install on Windows directly yet. Installing as Linux inside WSL2 works (a user has verified it). Know these things. The system service needs systemd enabled in the distro (`systemd=true` in `/etc/wsl.conf`). If it is off, add `--no-service` and run `agent-autoloop up` yourself. It also does not start when nobody is logged in. If you want that, run `loginctl enable-linger`. Desktop notifications do not reach the Windows desktop. Use `agent-autoloop status` to see cards, or connect a channel such as Feishu. Agents connected with `command` do not report usage. Tokens and cost show “没上报” (“Tokens not reported” / “Cost not reported”). WSL2 itself uses about 1 GB of memory.
+Native Windows, macOS, and Linux are supported. You need Node.js 24 or newer, Git, and a command-line agent that is already signed in. macOS/Linux also need curl. Windows uses the built-in PowerShell 5.1 and Task Scheduler.
 
-You need Node.js 24 or newer, Git, curl, and a command-line agent that is already signed in.
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.ps1 | iex
+```
+
+The default install directory is `$env:USERPROFILE\.agent-autoloop`. The command directory is added to both the current process's PATH and the user's PATH. The Windows service starts after the owner signs in and stops on sign-out. You can also use `service install` when managing it over SSH; the task runs in an existing signed-in Windows session. Codex 0.167's native sandbox has runner pipe-in timeouts in OpenSSH sessions, while local signed-in sessions work. See the [known Codex issue](https://github.com/openai/codex/issues/37722). For CI or command-line tests, use `--no-service`, then run the full command the installer prints to start `up`. Desktop notifications appear only in the same signed-in session.
+
+To install from a local repository:
+
+```powershell
+$env:AGENT_AUTOLOOP_REPO = 'C:\code\agent-autoloop'
+& 'C:\code\agent-autoloop\install.ps1' --agent codex --no-service
+```
+
+If the system does not allow local scripts, use `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\code\agent-autoloop\install.ps1 --agent codex --no-service` for this command only, without changing the global execution policy. Other install options are the same as for macOS/Linux below.
+
+Install in WSL2 as Linux. The service needs systemd enabled in the distro; otherwise, add `--no-service`. WSL2 desktop notifications do not reach the Windows desktop.
 
 Check `node --version` first. Homebrew's `node@24` is not on PATH by default. After installing it, also run `export PATH="$(brew --prefix node@24)/bin:$PATH"`. Write that into the user's shell config only when it needs to last. Do not sign in as the user, and do not read or copy login credentials.
 
-This repository is public. The install script and the code can be downloaded anonymously. No GitHub account, sign-in, or GitHub CLI (`gh`) is required. The command below installs the hub and enables a service that stays up after login:
+This repository is public. The install script and the code can be downloaded anonymously. No GitHub account, sign-in, or GitHub CLI (`gh`) is required. The macOS/Linux command below installs the hub and enables a service that stays up after login:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
@@ -31,9 +48,9 @@ AGENT_AUTOLOOP_REPO=/path/to/agent-autoloop sh /path/to/agent-autoloop/install.s
 
 `--agent claude` selects Claude Code. If the only tool is some other CLI, add `--command 'hermes chat -Q -q {prompt}'`. If you do not specify one, it detects agents installed on this machine and uses the first as the try-run target.
 
-The program is installed in `~/.agent-autoloop/app`. Configuration and records stay in `~/.agent-autoloop`. Desktop notifications are on by default. When there is no graphical session they are skipped quietly, and questions can still be seen with `agent-autoloop status`. The command goes in `~/.local/bin` when that directory is on PATH. Otherwise it picks the first writable directory on PATH. It does not use sudo and does not overwrite other programs. When there is nowhere to put it, use the full path the installer prints.
+The program is installed in `~/.agent-autoloop/app`. Configuration and records stay in `~/.agent-autoloop`. Desktop notifications are on by default. When there is no graphical session they are skipped quietly, and questions can still be seen with `agent-autoloop status`. On macOS/Linux, the command goes in `~/.local/bin` when that directory is on PATH. Otherwise it picks the first writable directory on PATH. It does not use sudo and does not overwrite other programs. When there is nowhere to put it, use the full path the installer prints.
 
-The installer and the hub both set the data directory to `0700` when they start, including a directory that already exists, so other system users cannot read the database, events, or run output. After an upgrade, the hub and the worker restart together. The new `status` uses the cost summary the hub provides.
+The installer and the hub both set the data directory to `0700` on macOS/Linux when they start. On Windows, they use an ACL that allows only the owner and SYSTEM. This includes a directory that already exists, so other system users cannot read the database, events, or run output. Codex's dedicated Windows sandbox account is additionally granted read access only to each round's `context.json` task data. The master key and round tokens remain inaccessible. After an upgrade, the hub and the worker restart together. The new `status` uses the cost summary the hub provides.
 
 If the projection format changes during an upgrade, it rebuilds from the old log, one fact at a time. A long history means the first start has to wait. Later starts reuse the projection. The original log and existing card links are kept. No manual migration is needed.
 
@@ -51,7 +68,7 @@ agent-autoloop up
 
 `up` keeps running. In the agent's command tool, keep the running session it returns, and use another command to finish the checks. Do not substitute `nohup … &`. The command tool may clean up background processes when it exits. Run the check commands after you see the listen address. If startup fails, deal with the error in that session first.
 
-When the command is not on PATH, replace `agent-autoloop` with the full path the installer printed. Temporary tests use a fake `osascript` and `notify-send`. Do not send real messages. Do not open another listener on a Feishu app that is already online.
+When the command is not on PATH, replace `agent-autoloop` with the full path the installer printed. Temporary tests use fake notification programs or channels. Do not show real notifications on Windows either. Do not open another listener on a Feishu app that is already online.
 
 ## Check
 
@@ -98,4 +115,4 @@ After a temporary install check, use `agent-autoloop uninstall --yes` to stop th
 - [Plugins](docs/plugins.en.md): three runnable minimal examples.
 - [Security boundaries](SECURITY.en.md): keys, execution permissions, and delivery review.
 
-Development checks use `npm run test:quick` (use `npm test` when you changed `kernel/`, `protocol/`, or `sim/`), `npm run typecheck`, and `npm run format:check`. Full failure checks and the performance measurements use `npm run test:nightly`. Backup and restore are in the [configuration manual](skills/agent-autoloop/SKILL.en.md#logs-and-recovery). If `master.key` is damaged, the hub refuses to start. Restore it from a backup. If there is no backup, delete it. A restart generates a new one, and card links already sent, and rounds that are running, become invalid.
+Windows development checks use `npm run test:windows` and `node scripts/install-smoke-windows.ts`. Linux/macOS use `npm run test:quick` (use `npm test` when you changed `kernel/`, `protocol/`, or `sim/`), `npm run typecheck`, and `npm run format:check`. Full failure checks and the performance measurements use `npm run test:nightly`. Backup and restore are in the [configuration manual](skills/agent-autoloop/SKILL.en.md#logs-and-recovery). If `master.key` is damaged, the hub refuses to start. Restore it from a backup. If there is no backup, delete it. A restart generates a new one, and card links already sent, and rounds that are running, become invalid.

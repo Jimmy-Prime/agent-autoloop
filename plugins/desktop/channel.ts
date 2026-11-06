@@ -4,9 +4,12 @@
 //   "channels": { "desktop": { "name": "桌面通知" } } in rules.json
 import { execFile, spawnSync } from "node:child_process";
 import type { Card, ChannelContext } from "../../host/channels.ts";
-import { wordsIn } from "../../words/words.ts";
+import { powershell } from "../../host/command.ts";
+import { tagIn, wordsIn } from "../../words/words.ts";
 import en from "./en.ts";
 import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 const APPLESCRIPT = ["on run argv", "display notification (item 2 of argv) with title (item 1 of argv)", "end run"];
 
@@ -23,12 +26,45 @@ export function notifyCommand(
   const words = () => t`运行 agent-autoloop status 查看`;
   const titleWords = () => t`Agent 问你一个问题`;
   const body = `${title}\n${words()}`;
+  if (platform === "win32") {
+    const data = Buffer.from(JSON.stringify({ title: titleWords(), body })).toString("base64");
+    const script = `$ErrorActionPreference='Stop'; [Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);
+      $words = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')) | ConvertFrom-Json
+      Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+      $icon = [Windows.Forms.NotifyIcon]::new()
+      try {
+        $icon.Icon = [Drawing.SystemIcons]::Information
+        $icon.BalloonTipTitle = $words.title
+        $icon.BalloonTipText = $words.body
+        $icon.Visible = $true
+        $icon.ShowBalloonTip(5000)
+        [Windows.Forms.Application]::DoEvents()
+        Start-Sleep -Seconds 5
+      } finally { $icon.Dispose() }`;
+    return [
+      "powershell.exe",
+      [
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-EncodedCommand",
+        Buffer.from(script, "utf16le").toString("base64"),
+      ],
+    ];
+  }
   if (platform === "darwin")
     return ["osascript", [...APPLESCRIPT.flatMap((line) => ["-e", line]), "--", titleWords(), body]];
   return ["notify-send", ["--", titleWords(), body]];
 }
 
 function hasDesktop() {
+  if (process.platform === "win32") {
+    return (
+      powershell(
+        "$session=(Get-Process -Id $PID).SessionId; [string][bool](@(Get-Process explorer -ErrorAction SilentlyContinue | Where-Object { $_.SessionId -eq $session }).Count)",
+      ) === "True"
+    );
+  }
   if (process.platform === "darwin") {
     return spawnSync("launchctl", ["print", `gui/${process.getuid!()}`], { stdio: "ignore" }).status === 0;
   }
@@ -50,7 +86,7 @@ export default async function desktop({ hub, log, signal }: ChannelContext) {
     try {
       ({ card } = await hub.nextCard(50));
     } catch (error) {
-      log(`连不上中台：${error}`);
+      log(t`连不上中台：${error}`);
       await new Promise((resolve) => setTimeout(resolve, 10_000));
       continue;
     }
@@ -68,7 +104,7 @@ export default async function desktop({ hub, log, signal }: ChannelContext) {
       await show(card);
       await hub.delivered(card.id, card.version, `shown-${card.id}`);
     } catch (error) {
-      log(`卡片 ${card.id} 的桌面通知没发出：${error}`);
+      log(t`卡片 ${card.id} 的桌面通知没发出：${error}`);
       await hub.failed(card.id, card.version, String(error)).catch(() => {});
     }
   }

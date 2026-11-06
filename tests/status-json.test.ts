@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { after, test } from "node:test";
-import { setup } from "./helpers.ts";
+import { at, setup } from "./helpers.ts";
 
 const home = setup("status-json");
 const hub = await import("./hub.ts");
@@ -18,7 +18,7 @@ await once(server, "listening");
 after(() => {
   server.closeAllConnections();
   server.close();
-  hub.db.close();
+  if (hub.db.isOpen) hub.db.close();
 });
 writeFileSync(
   join(home, "config.json"),
@@ -32,6 +32,23 @@ const cli = async (...args: string[]) =>
       { env: { ...process.env } },
     )
   ).stdout;
+
+test("state exposes only pending timers on the first page", () => {
+  hub.ingest("app", { id: "timer-state", type: "feedback.new", subject: "#timer" }, at(0));
+  const job = hub.claimNext("w1", "timer-state", at(0))!;
+  hub.finish(
+    job.run,
+    job.token,
+    { outcome: "done", later: [{ key: "verify", at: new Date(at(100)).toISOString(), about: "核对结果" }] },
+    at(1),
+  );
+  assert.deepEqual(hub.stateOf(at(2)).timers, [
+    { rule: "意见", lane: "#timer", key: "verify", about: "核对结果", at: new Date(at(100)).toISOString() },
+  ]);
+  assert.deepEqual(hub.stateOf(at(2), job.run + 1).timers, []);
+  hub.execute("tick", [], at(101));
+  assert.deepEqual(hub.stateOf(at(101)).timers, []);
+});
 
 test("status --json prints the same state the hub serves, and the plain output stays human", async () => {
   hub.execute(
