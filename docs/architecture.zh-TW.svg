@@ -57,7 +57,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <rect class="item" x="36" y="234" width="146" height="36" rx="8"/>
 <text x="109" y="257" class="r" text-anchor="middle">你的業務系統</text>
 <rect class="item" x="36" y="280" width="146" height="36" rx="8"/>
-<text x="109" y="303" class="r" text-anchor="middle">輪詢指令碼</text>
+<text x="109" y="303" class="r" text-anchor="middle">輪詢腳本</text>
 <rect class="more" x="36" y="326" width="146" height="32" rx="8"/>
 <circle class="dot" cx="97" cy="342" r="2.4"/>
 <circle class="dot" cx="109" cy="342" r="2.4"/>
@@ -93,7 +93,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <rect class="chip" x="268" y="276" width="424" height="40" rx="9"/>
 <rect class="tag" x="276" y="283" width="92" height="26" rx="6"/>
 <text x="322" y="300.5" class="tn" text-anchor="middle">指令資料分離</text>
-<text x="378" y="300.5" class="td">Issue 裡的話進不了提示詞，也改不了目錄和許可權</text>
+<text x="378" y="300.5" class="td">Issue 裡的話進不了提示詞，也改不了目錄和權限</text>
 
 <rect class="chip" x="268" y="324" width="424" height="40" rx="9"/>
 <rect class="tag" x="276" y="331" width="92" height="26" rx="6"/>

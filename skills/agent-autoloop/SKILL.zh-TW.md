@@ -13,7 +13,7 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 
 ## 看情況、回答
 
-`agent-autoloop status` 列出誰線上、等使用者什麼、在做什麼、做過什麼，還有按完成時間統計的今天和最近 7 天的輪數、Token 和費用（同一輪重試的已報用量相加，沒上報的輪數會寫出來）。`agent-autoloop status --json` 輸出 `/v1/state` 的原樣結構，給指令碼和看板用。`agent-autoloop answer <卡片> <序號>` 回答，`agent-autoloop resolve <卡片> <結果>` 結案，`agent-autoloop stop <第幾輪>` 停掉一輪，等整個行程組退出才報告已停。
+`agent-autoloop status` 列出誰線上、等使用者什麼、在做什麼、做過什麼，還有按完成時間統計的今天和最近 7 天的輪數、Token 和費用（同一輪重試的已報用量相加，沒上報的輪數會寫出來）。`agent-autoloop status --json` 輸出 `/v1/state` 的原樣結構，給腳本和看板用。`agent-autoloop answer <卡片> <序號>` 回答，`agent-autoloop resolve <卡片> <結果>` 結案，`agent-autoloop stop <第幾輪>` 停掉一輪，等整個行程組退出才報告已停。
 
 續接會話也只算這次新增的用量。`~/.agent-autoloop/worker/usage/` 存著相減要用的累計值，沒有記錄的續接（比如刪了這個目錄）這次不報 Codex 的 Token 和 Claude Code 的費用，下一次恢復正常。本人開啟連結在同一個會話裡接著聊用掉的量，會算進下一次續接。舊回條不重算。
 
@@ -21,7 +21,7 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 
 ## 改規則
 
-改 `rules.json`，執行 `agent-autoloop check`。幾秒內生效；寫錯了舊規則繼續跑，並推一張卡片說錯在哪。`agent-autoloop rules explain` 列出本機規則生效的樣子和下次定時，`agent-autoloop emit <型別> --dry-run` 預演一條事件會派給誰，兩個都只看本機的 `rules.json`，不連線中控台。尚未領取的任務在領活時一起更新 Agent、目錄和許可權；已領取任務的 Job 設定與接單程式保留到這次執行結束。
+改 `rules.json`，執行 `agent-autoloop check`。幾秒內生效；寫錯了舊規則繼續跑，並推一張卡片說錯在哪。`agent-autoloop rules explain` 列出本機規則生效的樣子和下次定時，`agent-autoloop emit <型別> --dry-run` 預演一條事件會派給誰，兩個都只看本機的 `rules.json`，不連線中控台。尚未領取的任務在領活時一起更新 Agent、目錄和權限；已領取任務的 Job 設定與接單程式保留到這次執行結束。
 
 `language` 寫介面和卡片用的語言：`zh-CN`（預設）、`zh-TW` 或 `en`。
 
@@ -39,7 +39,7 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 - 預設的先問清單是 `askFirst`，使用者說什麼事必須先問他，就改這裡。
 - 使用者在別的地方定時跑的任務（Claude、Codex 應用裡），寫進 `elsewhere`，只在 `agent-autoloop status` 裡列出來；它們要找使用者時執行 `agent-autoloop tell <編號> --task <任務名>`，內容從標準輸入傳。要使用者拍板的，給這個任務寫上 `cwd` 和 `skill` 或 `prompt`，任務裡執行 `agent-autoloop ask --task <任務名>`，標準輸入傳回條那樣的 `ask`：卡片帶選項，使用者點了，中控台叫醒它的 Agent 在 `cwd` 照 `skill`、`prompt` 接著做，回答在這一輪資料檔案的 `answers` 裡。
 
-現成場景和內建外掛從 [README](../../README.zh-TW.md#拿來即用的場景模板)進入，開發示例見[寫外掛](../../docs/plugins.zh-TW.md)。使用者想接自動化時先從例子改，不要從零寫：`examples/recipes/` 裡有早報（`morning-brief`）、處理 GitHub issue（`github-issues`）、線上報錯（`ops-alerts`）、反饋處理（`feedback`）、網站巡檢（`website-watch`）、飛書週報與業務摘要（`feishu-brief`）和 Claude 瀏覽器交接（`browser-handoff`），每個都有規則、Skill 和寫明許可權原因的 README。反饋、巡檢、飛書摘要和瀏覽器交接預設飛書本人私聊；按模板說明替換虛構標識，業務資料留在私有目錄，讀取用本人身份，通知用機器人身份。要寫新的 Agent、通道或事件外掛，看教程 `docs/plugins.md` 和最小例子 `examples/plugins/`。
+現成場景和內建外掛從 [README](../../README.zh-TW.md#拿來即用的場景範本)進入，開發示例見[寫外掛](../../docs/plugins.zh-TW.md)。使用者想接自動化時先從例子改，不要從零寫：`examples/recipes/` 裡有早報（`morning-brief`）、處理 GitHub issue（`github-issues`）、線上報錯（`ops-alerts`）、反饋處理（`feedback`）、網站巡檢（`website-watch`）、飛書週報與業務摘要（`feishu-brief`）和 Claude 瀏覽器交接（`browser-handoff`），每個都有規則、Skill 和寫明權限原因的 README。反饋、巡檢、飛書摘要和瀏覽器交接預設飛書本人私聊；按範本說明替換虛構標識，業務資料留在私有目錄，讀取用本人身份，通知用機器人身份。要寫新的 Agent、通道或事件外掛，看教程 `docs/plugins.md` 和最小例子 `examples/plugins/`。
 
 ## 寫處理手冊
 
@@ -55,7 +55,7 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 
 1. **對方能發 HTTP**：`agent-autoloop key new source <名字>` 拿金鑰（這是新建金鑰，先問使用者），`rules.json` 的 `sources` 登記，對方 `POST /v1/events`。
 2. **對方有自己的 Webhook 格式**：在 `~/.agent-autoloop/plugins/<名字>/source.ts` 寫一個函式，驗籤並翻譯成事件（見 `plugins/github/source.ts`），來源寫 `"adapter": "<名字>"`，地址是 `/v1/in/<來源>`，秘密放 `~/.agent-autoloop/secrets.env` 的 `AGENT_AUTOLOOP_SECRET_<來源>`（來源名轉大寫，`-` 換成 `_`），改完重啟中控台（`agent-autoloop service install`）。對方要能連到中控台，所以中控台要在伺服器上，或者用隧道。
-3. **對方推不過來，或者中控台在家裡**：定時跑一段指令碼輪詢，見 `examples/watch-github-issues.sh`。規則用 `use: "command"` 的 Agent，寫上 `emits`。沒新東西不花 Token。
+3. **對方推不過來，或者中控台在家裡**：定時跑一段腳本輪詢，見 `examples/watch-github-issues.sh`。規則用 `use: "command"` 的 Agent，寫上 `emits`。沒新東西不花 Token。
 
 ## 接一個 Agent
 
@@ -67,17 +67,17 @@ description: 設定 Agent 自動化中控台：加規則、接新的事件外掛
 
 退出碼不是 0 算沒跑成。要會話接續、開啟會話的連結和用量統計，在 `~/.agent-autoloop/plugins/<名字>/agent.ts` 寫一個外掛（照 `plugins/codex/agent.ts`）：`command` 給命令列，`read` 從輸出讀最後一條訊息和會話，Agent 收下提示詞後帶上 `started: true`（否則幹到一半斷了會開新會話重做），`link` 給連結。
 
-`access` 預設 `edit`，專用外掛翻譯成對應 CLI 的許可權；`command` 只傳參數，不替任意程式限制許可權，按該 CLI 文件設定。要完整許可權、不審批的話寫 `full`，先和使用者說清楚。
+`access` 預設 `edit`，專用外掛翻譯成對應 CLI 的權限；`command` 只傳參數，不替任意程式限制權限，按該 CLI 文件設定。要完整權限、不審批的話寫 `full`，先和使用者說清楚。
 
 第三方倉庫根目錄放 `agent.ts`、`channel.ts` 或 `source.ts`，用 `agent-autoloop add <git 地址>` 安裝到 `~/.agent-autoloop/plugins/<倉庫名>`。倉庫名轉成小寫就是外掛名，規則的 `use` 寫它；只能有小寫字母、數字和 `-`，不合要求的 `add` 會拒絕。同名本機外掛優先於內建外掛，不自動更新。外掛是可信程式碼，先讀再裝。
 
 一輪最長跑多久寫 `timeout`，單位是分鐘，預設 180。
 
-ACP 用 `use: "acp"` 和 `command: ["ACP 服務程式"]`，支援 v1 的會話新建、恢復、文字與一次性許可權請求；先在該 Agent 自己的 CLI 登入。`access` 只管 Agent 主動來問的操作，規範允許它不詢問就執行，要限制得用它自己的模式（比如 `command` 裡寫 `env INITIAL_AGENT_MODE=read-only …`）；`model`、`effort` 不生效。普通命令接法與實測支援範圍見 README。
+ACP 用 `use: "acp"` 和 `command: ["ACP 服務程式"]`，支援 v1 的會話新建、恢復、文字與一次性權限請求；先在該 Agent 自己的 CLI 登入。`access` 只管 Agent 主動來問的操作，規範允許它不詢問就執行，要限制得用它自己的模式（比如 `command` 裡寫 `env INITIAL_AGENT_MODE=read-only …`）；`model`、`effort` 不生效。普通命令接法與實測支援範圍見 README。
 
-DeepSeek Harness 用 `use: "dsh"`，要 0.2.2 或更新（`npm install -g @deepseek-ai/dsh@next --allow-scripts=koffi,node-pty,@deepseek-ai/dsh-subprocess-local`，不放行這三個包的安裝指令碼，裝完一跑就出錯），能續接原會話、上報 Token（不報費用），報 `MISSING_CREDENTIAL` 時把金鑰放進環境變數，`access` 對應它的許可權檔位；舊版用 README 裡的普通命令接法。沒有可開啟的桌面連結。
+DeepSeek Harness 用 `use: "dsh"`，要 0.2.2 或更新（`npm install -g @deepseek-ai/dsh@next --allow-scripts=koffi,node-pty,@deepseek-ai/dsh-subprocess-local`，不放行這三個包的安裝腳本，裝完一跑就出錯），能續接原會話、上報 Token（不報費用），報 `MISSING_CREDENTIAL` 時把金鑰放進環境變數，`access` 對應它的權限檔位；舊版用 README 裡的普通命令接法。沒有可開啟的桌面連結。
 
-Claude 主任務要委託 Codex 操作網頁時，從 `examples/recipes/browser-handoff/` 設定已驗收的入口、目標與允許操作，保留返回的 Codex 子會話編號；受阻由主任務交 `ask`，恢復後只續辦網頁步驟。入口呼叫模板不提供瀏覽器連線，也不修改桌面應用或授權。
+Claude 主任務要委託 Codex 操作網頁時，從 `examples/recipes/browser-handoff/` 設定已驗收的入口、目標與允許操作，保留返回的 Codex 子會話編號；受阻由主任務交 `ask`，恢復後只續辦網頁步驟。入口呼叫範本不提供瀏覽器連線，也不修改桌面應用或授權。
 
 網頁任務使用 Agent 已設定的瀏覽器工具。需要專用入口時，在規則的 `prompt` 或 `skill` 寫明已有命令和會話接續方式，只交網頁步驟，業務和回條仍由主任務負責。不能假定後台 CLI 已接通桌面瀏覽器；用同一後台方式驗收頁面和接續，見 `docs/plugins.md` 的「瀏覽器接入」。
 
@@ -188,7 +188,7 @@ Claude 主任務要委託 Codex 操作網頁時，從 `examples/recipes/browser-
 
 ## MCP 與金鑰撤銷
 
-MCP 客戶端的啟動程式填 `node`，參數為本機引擎絕對路徑 `bin/agent-autoloop.ts`、`mcp`，環境裡傳 `AGENT_AUTOLOOP_HOME`。支援 stdio 2025-11-25 版，使用本機 `config.json` 已有金鑰，不把金鑰寫進客戶端參數。工具按已有身份顯示；不自動建立許可權。
+MCP 客戶端的啟動程式填 `node`，參數為本機引擎絕對路徑 `bin/agent-autoloop.ts`、`mcp`，環境裡傳 `AGENT_AUTOLOOP_HOME`。支援 stdio 2025-11-25 版，使用本機 `config.json` 已有金鑰，不把金鑰寫進客戶端參數。工具按已有身份顯示；不自動建立權限。
 
 MCP 服務不區分呼叫方，都按本人記錄（`answer` 記成本人，`emit` 不帶層數）。不要把它配進接單程式啟動的 CLI 的使用者級設定，否則一輪能自己回答自己的卡片。
 
@@ -209,9 +209,9 @@ MCP 服務不區分呼叫方，都按本人記錄（`answer` 記成本人，`emi
 
 日誌：macOS 在 `~/.agent-autoloop/logs/up.log`，Linux 執行 `journalctl --user -u agent-autoloop`。
 
-接外掛先在專用測試中控台驗證：`agent-autoloop conformance <地址> --config <測試憑據檔案>`。檔案裡的 `keys` 分別放來源、接單程式、通道、本人金鑰；`eventType` 匹配測試規則，`answerer` 在測試通道的允許名單內。檢查會寫事件和卡片，不指向正在用的中控台。協議型別在 `protocol/schema.json`。
+接外掛先在專用測試中控台驗證：`agent-autoloop conformance <地址> --config <測試憑證檔案>`。檔案裡的 `keys` 分別放來源、接單程式、通道、本人金鑰；`eventType` 匹配測試規則，`answerer` 在測試通道的允許名單內。檢查會寫事件和卡片，不指向正在用的中控台。協議型別在 `protocol/schema.json`。
 
-`agent-autoloop why 42` 查一輪的事件、規則和回條；`GET /v1/stream?after=42` 供本人客戶端按序號續讀。備份用 `agent-autoloop backup [目錄]`，中控台執行時也能做；恢復用 `agent-autoloop restore <目錄>`，要先停中控台。手工備份要一起保留 `hub.db` 和許可權為 0600 的 `master.key`；後者推導輪次和卡片連結的 token。
+`agent-autoloop why 42` 查一輪的事件、規則和回條；`GET /v1/stream?after=42` 供本人客戶端按序號續讀。備份用 `agent-autoloop backup [目錄]`，中控台執行時也能做；恢復用 `agent-autoloop restore <目錄>`，要先停中控台。手工備份要一起保留 `hub.db` 和權限為 0600 的 `master.key`；後者推導輪次和卡片連結的 token。
 
 ## 版本與解除安裝
 

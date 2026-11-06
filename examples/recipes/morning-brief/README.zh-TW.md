@@ -18,4 +18,4 @@ agent-autoloop check
 ## 要改哪幾處
 - `worker` 換成 `agent-autoloop status` 顯示的接單電腦；`use` 選 `codex` 或 `claude`。
 - `cwd` 換成已有的筆記目錄；`cron` 是當地時間，預設每天八點。
-- 許可權：`edit`。兩種外掛都能讀本地資料、寫早報；不需要聯網或任意 shell 命令，見[許可權說明](../../../docs/plugins.zh-TW.md#access-實際能做什麼)。
+- 權限：`edit`。兩種外掛都能讀本地資料、寫早報；不需要聯網或任意 shell 命令，見[權限說明](../../../docs/plugins.zh-TW.md#access-實際能做什麼)。

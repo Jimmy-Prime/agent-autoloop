@@ -4,19 +4,19 @@
 
 > 這份由 `scripts/docs.ts` 從簡體中文版自動轉換，改內容請改簡體中文版。
 
-先看 [README 的內建外掛目錄](../README.zh-TW.md#外掛體系四個方向都能自由替換)選擇已有實現；需要擴充套件時，從下面三個可執行的最小模板開始，替換業務部分：
+先看 [README 的內建外掛目錄](../README.zh-TW.md#外掛體系四個方向都能自由替換)選擇已有實現；需要擴充套件時，從下面三個可執行的最小范本開始，替換業務部分：
 
-| 模板 | 已經演示了什麼 | 你要替換什麼 |
+| 範本 | 已經演示了什麼 | 你要替換什麼 |
 |---|---|---|
-| [Agent 模板](../examples/plugins/hello-agent/agent.ts) | 用 `printf` 模擬執行，讀取輸出、會話編號和「收下了提示詞」 | 新 Agent 的啟動命令和輸出解析 |
-| [通道模板](../examples/plugins/hello-channel/channel.ts) | 領卡片、寫到檔案、報告送達；通過命令列回答 | 目標平台的傳送、更新和回答回呼 |
-| [事件外掛模板](../examples/plugins/hello-source/source.ts) | 驗證 HMAC-SHA256 簽名，把模擬訂單轉換成事件 | 業務系統的驗籤方式和欄位對映 |
+| [Agent 範本](../examples/plugins/hello-agent/agent.ts) | 用 `printf` 模擬執行，讀取輸出、會話編號和「收下了提示詞」 | 新 Agent 的啟動命令和輸出解析 |
+| [通道範本](../examples/plugins/hello-channel/channel.ts) | 領卡片、寫到檔案、報告送達；通過命令列回答 | 目標平台的傳送、更新和回答回呼 |
+| [事件外掛範本](../examples/plugins/hello-source/source.ts) | 驗證 HMAC-SHA256 簽名，把模擬訂單轉換成事件 | 業務系統的驗籤方式和欄位對映 |
 
-事件外掛、接單程式、通道和命令列共用同一套 HTTP + JSON 介面。只用 Shell 接協議，可以看 [接單指令碼](../examples/worker.sh) 和 [通道指令碼](../examples/channel.sh)：設定中控台地址與金鑰後執行，需要 `curl`、`jq`。它們適合演示短任務；長任務使用內建接單程式的心跳、停止和恢復能力。
+事件外掛、接單程式、通道和命令列共用同一套 HTTP + JSON 介面。只用 Shell 接協議，可以看 [接單腳本](../examples/worker.sh) 和 [通道腳本](../examples/channel.sh)：設定中控台地址與金鑰後執行，需要 `curl`、`jq`。它們適合演示短任務；長任務使用內建接單程式的心跳、停止和恢復能力。
 
 一個外掛就是一個目錄，入口為 `agent.ts`、`channel.ts` 或 `source.ts`。只用 `node:` 模組和自己目錄裡的檔案，型別在外掛裡宣告；不要相對引用引擎原始碼：裝在 `~/.agent-autoloop/plugins/` 的外掛，相對路徑到不了引擎。內建外掛和引擎放在一起釋出，才能直接引 `worker/agents.ts` 裡的 `findProgram`、`tail` 這些小工具，引擎不反過來引外掛。
 
-用 `agent-autoloop add <git 地址>` 安裝到 `~/.agent-autoloop/plugins/<倉庫名>`，也接受本地 Git 倉庫。外掛名就是那個目錄名：倉庫名轉成小寫，只能用小寫字母、數字和 `-`，別的名字會被拒絕，並說出它算出來的名字；規則的 `use` 和來源的 `adapter` 都寫這個名字。它只克隆，不裝依賴、不跑安裝指令碼、不自動更新。載入時會執行外掛，安裝目錄的同名外掛優先。
+用 `agent-autoloop add <git 地址>` 安裝到 `~/.agent-autoloop/plugins/<倉庫名>`，也接受本地 Git 倉庫。外掛名就是那個目錄名：倉庫名轉成小寫，只能用小寫字母、數字和 `-`，別的名字會被拒絕，並說出它算出來的名字；規則的 `use` 和來源的 `adapter` 都寫這個名字。它只克隆，不裝依賴、不跑安裝腳本、不自動更新。載入時會執行外掛，安裝目錄的同名外掛優先。
 
 ## 先跑起來
 
@@ -53,15 +53,15 @@ node --disable-warning=ExperimentalWarning --test --test-name-pattern='agent-aut
 
 只需要印出最後一條訊息時，用內建 `command` 加參數陣列即可，不必寫外掛。參數裡可以用 `{prompt}`、`{model}`、`{effort}`、`{cwd}`、`{context}`，每個參數只替換一輪，替換進去的提示詞原樣傳給程式：提示詞裡寫著 `{cwd}` 或 `$&`，到程式那邊也還是這幾個字，不會被再替換一次。執行時還有環境變數 `AGENT_AUTOLOOP_CONTEXT`（資料檔案）和 `AGENT_AUTOLOOP_RUN`（第幾輪）。
 
-DeepSeek Harness 有內建 `dsh` 外掛，規則裡寫 `use: "dsh"`，要 0.2.2 或更新，`agent-autoloop doctor` 會查。現在 npm 的 `latest` 還是舊版，要這樣裝：`npm install -g @deepseek-ai/dsh@next --allow-scripts=koffi,node-pty,@deepseek-ai/dsh-subprocess-local`。新版 npm 預設不跑依賴的安裝指令碼，不放行這三個包，裝完看著正常，一跑才出錯。從舊版升上來的，0.2.2 可能讀不到 `~/.dsh/.credentials.yaml` 裡的 `refs`，報 `MISSING_CREDENTIAL`：把金鑰放進環境變數，Linux 的系統服務放 `~/.config/environment.d/*.conf`。只上報 Token，不上報費用。有使用者在 WSL2 上用 0.2.2-rc.1 和第三方 OpenAI 相容服務實測跑通了問答、用量和 `resume`。它以 `dsh headless --json` 跑一輪，從 `session` 事件拿會話編號，用 `--session-id` 續接，把 `step_end` 的用量彙總為 Token，`final` 事件才算跑完；`access` 每次都對映成 `--permission-mode`，要人批准的呼叫用 `--approval-policy never` 直接拒絕。規則裡的 `model`、`effort` 不起作用，用 DSH 自己的設定。沒有可開啟的桌面會話連結。DSH 預設把會話日誌上傳給 DeepSeek，見[它的說明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md)。
+DeepSeek Harness 有內建 `dsh` 外掛，規則裡寫 `use: "dsh"`，要 0.2.2 或更新，`agent-autoloop doctor` 會查。現在 npm 的 `latest` 還是舊版，要這樣裝：`npm install -g @deepseek-ai/dsh@next --allow-scripts=koffi,node-pty,@deepseek-ai/dsh-subprocess-local`。新版 npm 預設不跑依賴的安裝腳本，不放行這三個包，裝完看著正常，一跑才出錯。從舊版升上來的，0.2.2 可能讀不到 `~/.dsh/.credentials.yaml` 裡的 `refs`，報 `MISSING_CREDENTIAL`：把金鑰放進環境變數，Linux 的系統服務放 `~/.config/environment.d/*.conf`。只上報 Token，不上報費用。有使用者在 WSL2 上用 0.2.2-rc.1 和第三方 OpenAI 相容服務實測跑通了問答、用量和 `resume`。它以 `dsh headless --json` 跑一輪，從 `session` 事件拿會話編號，用 `--session-id` 續接，把 `step_end` 的用量彙總為 Token，`final` 事件才算跑完；`access` 每次都對映成 `--permission-mode`，要人批准的呼叫用 `--approval-policy never` 直接拒絕。規則裡的 `model`、`effort` 不起作用，用 DSH 自己的設定。沒有可開啟的桌面會話連結。DSH 預設把會話日誌上傳給 DeepSeek，見[它的說明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md)。
 
 ### 瀏覽器接入
 
 瀏覽器工具裝在執行 Agent 的電腦上，由該 CLI 的工具設定或專案 Skill 提供。Codex 外掛啟動的是後台 [`codex exec`](https://developers.openai.com/codex/noninteractive/)；可以使用它已設定的 [MCP 工具](https://developers.openai.com/codex/mcp/)，不能只憑桌面應用能開啟網頁就認定後台也能訪問同一瀏覽器。
 
-Claude 委託 Codex 的完整規則、Skill 和參數呼叫指令碼見[瀏覽器交接模板](../examples/recipes/browser-handoff/README.zh-TW.md)。入口命令、目標與允許操作由本人設定；網頁助手返回證據和會話編號，主任務負責業務與回條。
+Claude 委託 Codex 的完整規則、Skill 和參數呼叫腳本見[瀏覽器交接範本](../examples/recipes/browser-handoff/README.zh-TW.md)。入口命令、目標與允許操作由本人設定；網頁助手返回證據和會話編號，主任務負責業務與回條。
 
-已有專用瀏覽器入口時，在規則的 `prompt` 或 `skill` 寫明實際命令、會話接續方式和允許的操作。只交網頁步驟，返回看到的內容、操作結果和阻塞原因；主任務負責業務和中控台回條。瀏覽器入口不是必裝元件，中控台不捆綁某台電腦的指令碼，也不自動修改 CLI 的工具設定。
+已有專用瀏覽器入口時，在規則的 `prompt` 或 `skill` 寫明實際命令、會話接續方式和允許的操作。只交網頁步驟，返回看到的內容、操作結果和阻塞原因；主任務負責業務和中控台回條。瀏覽器入口不是必裝元件，中控台不捆綁某台電腦的腳本，也不自動修改 CLI 的工具設定。
 
 需要網頁驗收的任務，要用同一後台啟動方式實際開啟目標頁面，核對內容並接續一次會話。缺少可用入口或需要本人恢復連線、登入、驗證時，保留未驗收項，用現有 `ask` 等待恢復；不要寫“沒跑成”觸發重派，也不能把 HTTP 查詢當作已經完成網頁驗收。
 
@@ -108,7 +108,7 @@ Claude 委託 Codex 的完整規則、Skill 和參數呼叫指令碼見[瀏覽�
 
 ## access 實際能做什麼
 
-`access` 由外掛翻譯，不是中控台提供的系統沙箱。以下是未額外放寬本機許可權時的行為。
+`access` 由外掛翻譯，不是中控台提供的系統沙箱。以下是未額外放寬本機權限時的行為。
 
 | 外掛 | `read` | `edit` | `full` |
 |---|---|---|---|
@@ -117,11 +117,11 @@ Claude 委託 Codex 的完整規則、Skill 和參數呼叫指令碼見[瀏覽�
 | DeepSeek Harness | `read-only`：不能寫檔案，讀檔案和聯網不受限 | `workspace-write`：命令和檔案改動限於工作目錄和臨時目錄，讀檔案和聯網不受限 | `danger-full-access`：不受限制 |
 | ACP | Agent 來問時，同意讀和搜尋 | 再同意工作目錄內的編輯 | 同意它來問的所有操作 |
 
-Codex 的三個檔位已用外掛命令實跑；DeepSeek Harness 和 Claude Code 分別依據 [DSH 文件](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md)和[官方許可權說明](https://code.claude.com/docs/en/permission-modes)整理，沒有呼叫模型實跑。Codex 的命令網路限制與託管搜尋、MCP 不是同一個邊界，詳見[官方沙箱說明](https://learn.chatgpt.com/docs/agent-approvals-security)。使用者的 CLI 設定可能改變上述能力；`read` 也不代表讀不到本機金鑰。
+Codex 的三個檔位已用外掛命令實跑；DeepSeek Harness 和 Claude Code 分別依據 [DSH 文件](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md)和[官方權限說明](https://code.claude.com/docs/en/permission-modes)整理，沒有呼叫模型實跑。Codex 的命令網路限制與託管搜尋、MCP 不是同一個邊界，詳見[官方沙箱說明](https://learn.chatgpt.com/docs/agent-approvals-security)。使用者的 CLI 設定可能改變上述能力；`read` 也不代表讀不到本機金鑰。
 
 ACP 的 `access` 只管 Agent 主動來問的操作。規範允許 Agent 不詢問就執行，這種操作 `access` 攔不住，要用 Agent 自己的模式限制，比如 `command` 裡寫 `env INITIAL_AGENT_MODE=read-only …`。ACP 的 `model`、`effort` 不生效，也要在 Agent 自己那邊設定。
 
-場景模板據此選許可權：早報用 `edit` 寫本地檔案，issue 用 `edit` 改程式碼並讓固定指令碼聯網取正文，告警用 `read` 看程式碼和事件附帶的呼叫棧。反饋處理和飛書摘要用 `edit`，網站排查用 `read`；固定巡檢與飛書讀取指令碼負責聯網，摘要 Agent 只讀完整快照。`command` 和固定指令碼以本機帳號執行，不受 `access` 約束。
+場景範本據此選權限：早報用 `edit` 寫本地檔案，issue 用 `edit` 改程式碼並讓固定腳本聯網取正文，告警用 `read` 看程式碼和事件附帶的呼叫棧。反饋處理和飛書摘要用 `edit`，網站排查用 `read`；固定巡檢與飛書讀取腳本負責聯網，摘要 Agent 只讀完整快照。`command` 和固定腳本以本機帳號執行，不受 `access` 約束。
 
 ## 一致性測試
 
@@ -131,6 +131,6 @@ ACP 的 `access` 只管 Agent 主動來問的操作。規範允許 Agent 不詢�
 node --disable-warning=ExperimentalWarning --test tests/conformance.test.ts
 ```
 
-檢查其他中控台實現時，用 `agent-autoloop conformance <測試地址> --config <測試憑據檔案>`，檔案格式見[協議](protocol.zh-TW.md#一致性和復現)。它會寫事件和卡片，只對專用測試中控台執行。
+檢查其他中控台實現時，用 `agent-autoloop conformance <測試地址> --config <測試憑證檔案>`，檔案格式見[協議](protocol.zh-TW.md#一致性和復現)。它會寫事件和卡片，只對專用測試中控台執行。
 
 外掛本身的完整接入測試見 [tests/example-plugins.test.ts](../tests/example-plugins.test.ts)。用其他語言寫獨立行程也可以，參考 [curl/jq 通道](../examples/channel.sh)和[接單程式](../examples/worker.sh)。

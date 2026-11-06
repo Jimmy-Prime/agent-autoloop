@@ -310,7 +310,7 @@ export default {
   日志流泄露密钥记录: "The log stream exposes key records",
   日志流缺少事实: "The log stream is missing facts",
   旧消息发送失败: "Failed to send the old message",
-  "时区 {0}；先问你：{1}；{2} 条规则": "Time zone {0}; ask you first: {1}; {2} rules",
+  "时区 {0}；先问你：{1}；{2} 条规则": "Time zone {0}; ask you first: {1}; rules: {2}",
   "是不是关机、休眠或断网了": " is off, asleep, or offline",
   "暂停中没接：{0}": "Skipped while paused: {0}",
   "暂停了「{0}」。": 'Paused "{0}".',

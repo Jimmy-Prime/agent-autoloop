@@ -40,7 +40,7 @@ export default {
   "Agent 没跑成：{0}\n运行 agent-autoloop doctor 看看。": "Agent 沒跑成：{0}\n執行 agent-autoloop doctor 看看。",
   "Agent 的编号{0}：{1}": "Agent 的編號{0}：{1}",
   "Agent 自动化中台\n\n  agent-autoloop init [--agent claude|codex] [--command '某个命令 {prompt}'] [--port 3350] [--language zh-CN|zh-TW|en] [--no-service]\n                                    在这台电脑上装好：一个人一台电脑就够\n  agent-autoloop try                     用你的 Agent 跑一遍完整流程\n  agent-autoloop why <第几轮> [--json]  查看时间线；--json 输出原始事实\n  agent-autoloop conformance <地址> --config <测试凭据文件>\n                                    在测试中台上检查协议\n  agent-autoloop status [--json]         现在什么情况：谁在线、等你什么、在做什么、做过什么、花了多少\n                                     --json 输出 /v1/state 的原始结构，给脚本用\n  agent-autoloop answer <卡片> [序号] [--text 别的想法]\n                                    回答一张卡片；通知不用写序号\n  agent-autoloop resolve <卡片> <结果>   这件事不用决定了，写一句结果\n  agent-autoloop doctor                  查哪里没配好\n  agent-autoloop check [文件]            检查规则文件，不碰中台；不写文件就查 rules.json\n  agent-autoloop rules explain           按本机 rules.json 说明生效的规则、Agent、通道和下次定时\n  agent-autoloop pause <规则> [--reason 原因] [--until 时间]\n                                    暂停一条规则：到点不跑、来事件不接，直到恢复\n  agent-autoloop resume <规则>\n                                    恢复；错过的时段不补跑\n  agent-autoloop run <规则> [--subject 对象] [--reason 说明]\n                                    立即运行一轮，照常排队派活\n  agent-autoloop emit <类型> [--dry-run] [--subject x] [--summary x] [--detail x] [--link x] [--id x] [--key 来源密钥]\n                                    发一条事件；--dry-run 只预演会派给谁，不连接中台\n  agent-autoloop tell <编号> [--task 定时任务名]\n                                    直接告诉你一件事，内容从标准输入读\n  agent-autoloop ask --task <定时任务名>\n                                    定时任务问你一件事：标准输入传回执那样的 ask；你答了，它的 Agent 在 cwd 接着做\n  agent-autoloop stop <第几轮>           停掉一轮\n  agent-autoloop key new <source|worker|channel|owner> <名字>\n                                    新建一把密钥（只显示这一次）\n  agent-autoloop key list                有哪些密钥\n  agent-autoloop key remove <种类> <名字>  立即收回一把密钥\n  agent-autoloop add <git 地址>           安装插件，不自动更新\n  agent-autoloop mcp                      用标准输入输出连接 MCP 客户端\n  agent-autoloop join <中台地址> --worker <名字> --key <密钥> [--no-service]\n                                    另一台电脑只接活时用\n  agent-autoloop backup [目录]           备份数据库、主密钥、配置、规则和 secrets.env；不填目录就放在 ~/.agent-autoloop/backups\n  agent-autoloop restore <目录> [--yes]  停掉中台后，用一次备份恢复本机数据\n  agent-autoloop update                  更新到最新发布的版本\n  agent-autoloop uninstall [--yes]       卸载程序并保留数据；--yes 跳过确认\n  agent-autoloop --version               版本和当前提交\n  agent-autoloop help                    这份说明\n  agent-autoloop up                      启动（平时由系统服务调用）\n  agent-autoloop service install|remove  系统服务\n\n配置和数据在 {0}。规则在 {1}，改了自动生效。":
-    "Agent 自動化中控台\n\n  agent-autoloop init [--agent claude|codex] [--command '某個命令 {prompt}'] [--port 3350] [--language zh-CN|zh-TW|en] [--no-service]\n                                    在這台電腦上裝好：一個人一台電腦就夠\n  agent-autoloop try                     用你的 Agent 跑一遍完整流程\n  agent-autoloop why <第幾輪> [--json]  檢視時間線；--json 輸出原始事實\n  agent-autoloop conformance <地址> --config <測試憑據檔案>\n                                    在測試中控台上檢查協議\n  agent-autoloop status [--json]         現在什麼情況：誰線上、等你什麼、在做什麼、做過什麼、花了多少\n                                     --json 輸出 /v1/state 的原始結構，給指令碼用\n  agent-autoloop answer <卡片> [序號] [--text 別的想法]\n                                    回答一張卡片；通知不用寫序號\n  agent-autoloop resolve <卡片> <結果>   這件事不用決定了，寫一句結果\n  agent-autoloop doctor                  查哪裡沒配好\n  agent-autoloop check [檔案]            檢查規則檔案，不碰中控台；不寫檔案就查 rules.json\n  agent-autoloop rules explain           按本機 rules.json 說明生效的規則、Agent、通道和下次定時\n  agent-autoloop pause <規則> [--reason 原因] [--until 時間]\n                                    暫停一條規則：到點不跑、來事件不接，直到恢復\n  agent-autoloop resume <規則>\n                                    恢復；錯過的時段不補跑\n  agent-autoloop run <規則> [--subject 對象] [--reason 說明]\n                                    立即執行一輪，照常排隊派活\n  agent-autoloop emit <型別> [--dry-run] [--subject x] [--summary x] [--detail x] [--link x] [--id x] [--key 來源金鑰]\n                                    發一條事件；--dry-run 只預演會派給誰，不連線中控台\n  agent-autoloop tell <編號> [--task 定時任務名]\n                                    直接告訴你一件事，內容從標準輸入讀\n  agent-autoloop ask --task <定時任務名>\n                                    定時任務問你一件事：標準輸入傳回條那樣的 ask；你答了，它的 Agent 在 cwd 接著做\n  agent-autoloop stop <第幾輪>           停掉一輪\n  agent-autoloop key new <source|worker|channel|owner> <名字>\n                                    新建一把金鑰（只顯示這一次）\n  agent-autoloop key list                有哪些金鑰\n  agent-autoloop key remove <種類> <名字>  立即收回一把金鑰\n  agent-autoloop add <git 地址>           安裝外掛，不自動更新\n  agent-autoloop mcp                      用標準輸入輸出連線 MCP 客戶端\n  agent-autoloop join <中控台地址> --worker <名字> --key <金鑰> [--no-service]\n                                    另一台電腦只接活時用\n  agent-autoloop backup [目錄]           備份資料庫、主金鑰、設定、規則和 secrets.env；不填目錄就放在 ~/.agent-autoloop/backups\n  agent-autoloop restore <目錄> [--yes]  停掉中控台後，用一次備份恢復本機資料\n  agent-autoloop update                  更新到最新發布的版本\n  agent-autoloop uninstall [--yes]       解除安裝程式並保留資料；--yes 跳過確認\n  agent-autoloop --version               版本和當前提交\n  agent-autoloop help                    這份說明\n  agent-autoloop up                      啟動（平時由系統服務呼叫）\n  agent-autoloop service install|remove  系統服務\n\n設定和資料在 {0}。規則在 {1}，改了自動生效。",
+    "Agent 自動化中控台\n\n  agent-autoloop init [--agent claude|codex] [--command '某個命令 {prompt}'] [--port 3350] [--language zh-CN|zh-TW|en] [--no-service]\n                                    在這台電腦上裝好：一個人一台電腦就夠\n  agent-autoloop try                     用你的 Agent 跑一遍完整流程\n  agent-autoloop why <第幾輪> [--json]  檢視時間線；--json 輸出原始事實\n  agent-autoloop conformance <地址> --config <測試憑證檔案>\n                                    在測試中控台上檢查協議\n  agent-autoloop status [--json]         現在什麼情況：誰線上、等你什麼、在做什麼、做過什麼、花了多少\n                                     --json 輸出 /v1/state 的原始結構，給腳本用\n  agent-autoloop answer <卡片> [序號] [--text 別的想法]\n                                    回答一張卡片；通知不用寫序號\n  agent-autoloop resolve <卡片> <結果>   這件事不用決定了，寫一句結果\n  agent-autoloop doctor                  查哪裡沒配好\n  agent-autoloop check [檔案]            檢查規則檔案，不碰中控台；不寫檔案就查 rules.json\n  agent-autoloop rules explain           按本機 rules.json 說明生效的規則、Agent、通道和下次定時\n  agent-autoloop pause <規則> [--reason 原因] [--until 時間]\n                                    暫停一條規則：到點不跑、來事件不接，直到恢復\n  agent-autoloop resume <規則>\n                                    恢復；錯過的時段不補跑\n  agent-autoloop run <規則> [--subject 對象] [--reason 說明]\n                                    立即執行一輪，照常排隊派活\n  agent-autoloop emit <型別> [--dry-run] [--subject x] [--summary x] [--detail x] [--link x] [--id x] [--key 來源金鑰]\n                                    發一條事件；--dry-run 只預演會派給誰，不連線中控台\n  agent-autoloop tell <編號> [--task 定時任務名]\n                                    直接告訴你一件事，內容從標準輸入讀\n  agent-autoloop ask --task <定時任務名>\n                                    定時任務問你一件事：標準輸入傳回條那樣的 ask；你答了，它的 Agent 在 cwd 接著做\n  agent-autoloop stop <第幾輪>           停掉一輪\n  agent-autoloop key new <source|worker|channel|owner> <名字>\n                                    新建一把金鑰（只顯示這一次）\n  agent-autoloop key list                有哪些金鑰\n  agent-autoloop key remove <種類> <名字>  立即收回一把金鑰\n  agent-autoloop add <git 地址>           安裝外掛，不自動更新\n  agent-autoloop mcp                      用標準輸入輸出連線 MCP 客戶端\n  agent-autoloop join <中控台地址> --worker <名字> --key <金鑰> [--no-service]\n                                    另一台電腦只接活時用\n  agent-autoloop backup [目錄]           備份資料庫、主金鑰、設定、規則和 secrets.env；不填目錄就放在 ~/.agent-autoloop/backups\n  agent-autoloop restore <目錄> [--yes]  停掉中控台後，用一次備份恢復本機資料\n  agent-autoloop update                  更新到最新發布的版本\n  agent-autoloop uninstall [--yes]       解除安裝程式並保留資料；--yes 跳過確認\n  agent-autoloop --version               版本和當前提交\n  agent-autoloop help                    這份說明\n  agent-autoloop up                      啟動（平時由系統服務呼叫）\n  agent-autoloop service install|remove  系統服務\n\n設定和資料在 {0}。規則在 {1}，改了自動生效。",
   "Agent 自动化中台按规则「{0}」把这件活派给你。发生了：": "Agent 自動化中控台按規則「{0}」把這件活派給你。發生了：",
   "Agent：{0}": "Agent：{0}",
   "Token 没上报": "Token 沒上報",
@@ -108,7 +108,7 @@ export default {
   "{0}要是文字": "{0}要是文字",
   "{0}（{1}{2}{3}）": "{0}（{1}{2}{3}）",
   "{0}（{1}）": "{0}（{1}）",
-  "{0}（{1}，{2}，权限 {3}）": "{0}（{1}，{2}，許可權 {3}）",
+  "{0}（{1}，{2}，权限 {3}）": "{0}（{1}，{2}，權限 {3}）",
   "{0}（请看一眼那台电脑{1}）。": "{0}（請看一眼那台電腦{1}）。",
   "{0}：{1}": "{0}：{1}",
   "○ {0}没写 answerers：这个通道里谁都能回答卡片。": "○ {0}沒寫 answerers：這個通道里誰都能回答卡片。",
@@ -171,7 +171,7 @@ export default {
   "你上一条消息的回执读不懂（{0}）。你做过的事不要重做，也不要调用任何工具，":
     "你上一條訊息的回條讀不懂（{0}）。你做過的事不要重做，也不要呼叫任何工具，",
   "你选了「{0}」": "你選了「{0}」",
-  修改权限: "修改許可權",
+  修改权限: "修改權限",
   做完了: "做完了",
   停了: "停了",
   停服: "停服",
@@ -179,7 +179,7 @@ export default {
   "停止信号发出后没能确认进程组已结束：这一轮按没跑成记，不再重试，进程可能还在。":
     "停止訊號發出後沒能確認行程組已結束：這一輪按沒跑成記，不再重試，行程可能還在。",
   "先运行 {0} up 启动中台，再开一个终端运行 {1} try 跑一遍完整流程。":
-    "先執行 {0} up 啟動中控台，再開一個終端執行 {1} try 跑一遍完整流程。",
+    "先執行 {0} up 啟動中控台，再開一個終端機執行 {1} try 跑一遍完整流程。",
   六: "六",
   "写一句处理结果，最多 1000 字": "寫一句處理結果，最多 1000 字",
   "出了什么事，现在恢复没有，有什么影响，要他做什么或你的建议。不写技术缩写、状态码、文件路径和内部编号。":
@@ -335,7 +335,7 @@ export default {
   "没有卸载。": "沒有解除安裝。",
   没有填写结论: "沒有填寫結論",
   "没有恢复。": "沒有恢復。",
-  "没有权限读 {0}，改回能读的权限就会接着用": "沒有許可權讀 {0}，改回能讀的許可權就會接著用",
+  "没有权限读 {0}，改回能读的权限就会接着用": "沒有權限讀 {0}，改回能讀的權限就會接著用",
   "没有规则接 try.start 事件：rules.json 里的试跑规则被删掉或暂停了。":
     "沒有規則接 try.start 事件：rules.json 裡的試跑規則被刪掉或暫停了。",
   "没有规则接这条事件；真发出去会记成「没有规则接的事件」。":
@@ -364,7 +364,7 @@ export default {
   "用法：agent-autoloop backup [目录]": "用法：agent-autoloop backup [目錄]",
   "用法：agent-autoloop check [文件]": "用法：agent-autoloop check [檔案]",
   "用法：agent-autoloop conformance <测试中台地址> --config <测试凭据文件>":
-    "用法：agent-autoloop conformance <測試中控台地址> --config <測試憑據檔案>",
+    "用法：agent-autoloop conformance <測試中控台地址> --config <測試憑證檔案>",
   "用法：agent-autoloop doctor": "用法：agent-autoloop doctor",
   "用法：agent-autoloop emit <类型> [--dry-run] [--subject x] [--summary x] [--detail x] [--link x] [--id x] [--key 来源密钥]":
     "用法：agent-autoloop emit <型別> [--dry-run] [--subject x] [--summary x] [--detail x] [--link x] [--id x] [--key 來源金鑰]",
@@ -389,7 +389,7 @@ export default {
     "用法：agent-autoloop run <規則> [--subject 對象] [--reason 說明]",
   "用法：agent-autoloop service install|remove": "用法：agent-autoloop service install|remove",
   "用法：agent-autoloop status [--json]\n\n现在什么情况：谁在线、等你什么、在做什么、做过什么、花了多少。\n  --json  输出 /v1/state 的原始结构，给脚本和看板用":
-    "用法：agent-autoloop status [--json]\n\n現在什麼情況：誰線上、等你什麼、在做什麼、做過什麼、花了多少。\n  --json  輸出 /v1/state 的原始結構，給指令碼和看板用",
+    "用法：agent-autoloop status [--json]\n\n現在什麼情況：誰線上、等你什麼、在做什麼、做過什麼、花了多少。\n  --json  輸出 /v1/state 的原始結構，給腳本和看板用",
   "用法：agent-autoloop stop <第几轮>": "用法：agent-autoloop stop <第幾輪>",
   "用法：agent-autoloop tell <编号> [--task 定时任务名]，内容从标准输入读":
     "用法：agent-autoloop tell <編號> [--task 定時任務名]，內容從標準輸入讀",

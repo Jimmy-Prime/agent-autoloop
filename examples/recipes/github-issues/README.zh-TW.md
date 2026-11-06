@@ -13,9 +13,9 @@
 ```bash
 agent-autoloop check
 ```
-接單電腦需要已登入的 `gh`；輪詢指令碼把正文一併交給 Agent。
+接單電腦需要已登入的 `gh`；輪詢腳本把正文一併交給 Agent。
 
 ## 要改哪幾處
 - 兩處 `worker` 換成接單電腦；`use` 選 `codex` 或 `claude`。
 - `owner/repo` 換成倉庫，`created:>=2026-11-04` 換成啟用日期；`cwd` 換成乾淨的專案目錄。
-- 許可權：`edit`。Agent 只讀資料、改本地檔案；聯網由固定輪詢指令碼完成，它不受 `access` 限制。Claude 預設不放行任意測試命令，見[許可權說明](../../../docs/plugins.zh-TW.md#access-實際能做什麼)。
+- 權限：`edit`。Agent 只讀資料、改本地檔案；聯網由固定輪詢腳本完成，它不受 `access` 限制。Claude 預設不放行任意測試命令，見[權限說明](../../../docs/plugins.zh-TW.md#access-實際能做什麼)。

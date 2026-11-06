@@ -54,6 +54,9 @@ function expressionEnd(text: string, start: number): number {
 export function keysIn(text: string): string[] {
   const keys: string[] = [];
   for (const found of text.matchAll(/(?<![\w$.])t`/g)) {
+    // A comment may name t`…` as code: only what runs counts.
+    const line = text.slice(text.lastIndexOf("\n", found.index) + 1, found.index).trimStart();
+    if (/^(\/\/|\/\*|\*)/.test(line)) continue;
     const start = found.index + 1;
     const end = templateEnd(text, start);
     // Its words as JavaScript reads them, with each value left out: the ${…} become empty and so can't run.
@@ -95,6 +98,9 @@ const BEFORE: [string | RegExp, string][] = [
   // OpenCC would make even 對象 an object, so it goes through as a character it leaves alone.
   [/(?<!要是一个|要是|有限的|Git |JSON )对象/g, "\uE000"],
   ["全局", "整体"],
+  ["模板", "范本"],
+  // A database's transaction, which is all 事务 means here.
+  ["事务", "交易"],
   ["打印", "印出"],
   ["回执", "回条"],
   ["进程", "行程"],
@@ -111,6 +117,11 @@ const AFTER: [string | RegExp, string][] = [
   ["髮", "發"],
   ["隻", "只"],
   ["\uE000", "對象"],
+  // OpenCC's Taiwan phrases make 权限 a 許可權; in Taiwan it's 權限, and §3.4's 凭据 is 憑證, 终端 a 終端機.
+  ["許可權", "權限"],
+  ["憑據", "憑證"],
+  ["指令碼", "腳本"],
+  [/終端(?!機)/g, "終端機"],
 ];
 
 export async function toTaiwan(): Promise<(text: string) => string> {
