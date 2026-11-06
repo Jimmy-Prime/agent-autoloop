@@ -27,7 +27,7 @@ Works on macOS and Linux. You need Node 24, Git, curl, and at least one command-
 > **Windows: not supported yet.** Upstream is working on it; progress is in upstream's [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17). WSL2 works for now; see [INSTALL](INSTALL.en.md) for what to expect.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
 ```
 
 The installer and `agent-autoloop update` both install the newest [release](https://github.com/Jimmy-Prime/agent-autoloop/releases), which has passed every check.

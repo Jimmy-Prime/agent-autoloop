@@ -1,7 +1,8 @@
 name: check
 on:
   push:
-    branches: [main]
+    # This fork releases from taiwan; main only follows upstream.
+    branches: [main, taiwan]
   pull_request:
   workflow_dispatch:
 

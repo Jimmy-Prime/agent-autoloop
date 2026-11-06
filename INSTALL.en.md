@@ -14,7 +14,7 @@ Check `node --version` first. Homebrew's `node@24` is not on PATH by default. Af
 This repository is public. The install script and the code can be downloaded anonymously. No GitHub account, sign-in, or GitHub CLI (`gh`) is required. The command below installs the hub and enables a service that stays up after login:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
 ```
 
 GitHub issue polling, PR delivery, and similar features also need `gh` signed in. Configure those from the guide for that scenario. Running an agent still needs that agent's own login or authorization.

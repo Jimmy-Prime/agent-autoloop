@@ -195,7 +195,7 @@ MCP 服务不区分调用方，都按本人记录（`answer` 记成本人，`emi
 手机要批卡片、别人的 Webhook 要进来时，把中台放到一台有公网的机器上：
 
 1. 服务器上 `sh install.sh --no-service --command true`（这台不跑 Agent，`--command true` 只是占位，第 2 步把 `rules.json` 里的 Agent 换成真的），`config.json` 里 `hub.listen` 用 `127.0.0.1:3350`（要写成 `主机:端口`，IPv6 用 `[地址]:端口`；只写端口或 `:端口` 会被拒绝，避免意外监听所有网卡），`hub.publicUrl` 写公网地址，去掉 `worker`，再 `agent-autoloop service install`。前面放一个做 HTTPS 的反向代理（Caddy、nginx）。
-2. 每台干活的电脑：服务器上 `agent-autoloop key new worker <名字>`，电脑上 `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh -s -- join https://中台地址 --worker <名字> --key <密钥>`。`rules.json` 的 Agent 写上对应的 `worker`。
+2. 每台干活的电脑：服务器上 `agent-autoloop key new worker <名字>`，电脑上 `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh -s -- join https://中台地址 --worker <名字> --key <密钥>`。`rules.json` 的 Agent 写上对应的 `worker`。
 
 电脑不用开放任何端口，它们自己连过去。
 

@@ -199,7 +199,7 @@ MCP 服務不區分呼叫方，都按本人記錄（`answer` 記成本人，`emi
 手機要批卡片、別人的 Webhook 要進來時，把中控台放到一台有公網的機器上：
 
 1. 伺服器上 `sh install.sh --no-service --command true`（這台不跑 Agent，`--command true` 只是佔位，第 2 步把 `rules.json` 裡的 Agent 換成真的），`config.json` 裡 `hub.listen` 用 `127.0.0.1:3350`（要寫成 `主機:埠`，IPv6 用 `[地址]:埠`；只寫埠或 `:埠` 會被拒絕，避免意外監聽所有網絡卡），`hub.publicUrl` 寫公網地址，去掉 `worker`，再 `agent-autoloop service install`。前面放一個做 HTTPS 的反向代理（Caddy、nginx）。
-2. 每台做事的電腦：伺服器上 `agent-autoloop key new worker <名字>`，電腦上 `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh -s -- join https://中控台地址 --worker <名字> --key <金鑰>`。`rules.json` 的 Agent 寫上對應的 `worker`。
+2. 每台做事的電腦：伺服器上 `agent-autoloop key new worker <名字>`，電腦上 `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh -s -- join https://中控台地址 --worker <名字> --key <金鑰>`。`rules.json` 的 Agent 寫上對應的 `worker`。
 
 電腦不用開放任何埠，它們自己連過去。
 

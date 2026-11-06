@@ -84,3 +84,9 @@ PR 一开出来就开审查，几个 PR 同时审，不排队。审查报的问�
 - 加了或改了字：运行 `node scripts/words.ts` 重新生成繁体，再把它列出的英文补进对应的 `en.ts`；`tests/words.test.ts` 查漏。繁体文件只由脚本生成，不手改；用词不对就改脚本里的对照表。
 - 程序比对或存下来的字不翻：回执第一行的「没跑成」「没事可做」、审查要点的标题、记录谁做的 `by`。要认别的语言，就在比对的地方一起认。
 - 改了简体文档就运行 `node scripts/docs.ts` 重新生成繁体文档；英文文档（`*.en.md`）手动跟上。
+
+## 发版与同步上游（这个 fork）
+
+- 这个 fork 从 `taiwan` 分支发版，`main` 只跟着上游 fast-forward，不在 `main` 上提交。上面「一批怎么收尾」里说的 `main`，在这里都换成 `taiwan`：检查要过的是 `taiwan` 的提交，每日检查用 `gh workflow run nightly.yml --ref taiwan -f commit=<完整提交号>`，tag 打在 `taiwan` 的提交上。
+- 同步上游：`main` fast-forward 到上游的 `main`，再把 `main` 合进 `taiwan`；上游新加的字照上面「多语言」一节补翻译。
+- 版本号接着上游：比上游已经发过的版本大，Release 说明写清楚基于上游哪一版。上游的 tag 不推到这个 fork（`git remote add --no-tags upstream …`），否则安装和 `update` 会把上游的版本当成这里的版本装上。

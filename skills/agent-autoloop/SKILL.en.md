@@ -196,7 +196,7 @@ The MCP server does not tell callers apart. All of them are recorded as the owne
 When a phone needs to approve cards, or someone else's webhook needs to come in, put the hub on a machine that has a public address:
 
 1. On the server, run `sh install.sh --no-service --command true` (this machine does not run an agent; `--command true` is only a placeholder; step 2 replaces the agents in `rules.json` with real ones). In `config.json`, set `hub.listen` to `127.0.0.1:3350` (it has to be written as `host:port`; IPv6 uses `[address]:port`; a port on its own, or `:port`, is rejected, so it does not listen on every interface by accident). Set `hub.publicUrl` to the public address, remove `worker`, then run `agent-autoloop service install`. Put an HTTPS reverse proxy in front (Caddy or nginx).
-2. On each computer that does the work: on the server, run `agent-autoloop key new worker <name>`. On the computer, run `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh -s -- join https://hub-address --worker <name> --key <key>`. Set the matching `worker` on the agents in `rules.json`.
+2. On each computer that does the work: on the server, run `agent-autoloop key new worker <name>`. On the computer, run `curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh -s -- join https://hub-address --worker <name> --key <key>`. Set the matching `worker` on the agents in `rules.json`.
 
 The computers do not open any port. They connect out on their own.
 

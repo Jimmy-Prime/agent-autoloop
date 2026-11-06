@@ -27,7 +27,7 @@
 > **Windows：还不支持。** 上游正在开发，进度见上游的 [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17)。现在可以先用 WSL2，注意事项见 [INSTALL](INSTALL.md)。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
 ```
 
 安装和 `agent-autoloop update` 都装最新的 [Release](https://github.com/Jimmy-Prime/agent-autoloop/releases)，那是通过了全部检查的版本。

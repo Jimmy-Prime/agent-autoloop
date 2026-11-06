@@ -17,7 +17,7 @@
 本倉庫已公開，安裝腳本和程式碼都可匿名下載，不需要 GitHub 帳號、登入或 GitHub CLI（`gh`）。下面的命令安裝並啟用登入後常駐服務：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/taiwan/install.sh | sh
 ```
 
 GitHub Issue 輪詢和 PR 交付等功能另需已登入的 `gh`，按對應場景說明設定；執行 Agent 也仍需該 Agent 自己的登入或授權。
