@@ -92,6 +92,17 @@ Claude 主任务要委托 Codex 操作网页时，从 `examples/recipes/browser-
 
 同一个飞书应用的卡片点击只能有一个监听，只在一台电脑上跑。
 
+**Telegram**：用 Bot API，往外连就能收按钮点击，本机不用公开地址。在 Telegram 找 @BotFather 用 `/newbot` 建一个 bot，拿到 token；先跟这个 bot 私聊说一句话，再打开 `https://api.telegram.org/bot<token>/getUpdates`，`message.chat.id` 就是你们私聊的 chat id，私聊时也是你的用户编号。然后：
+
+```json
+// rules.json
+"channels": { "telegram": { "name": "Telegram", "answerers": ["你的用户编号"] } }
+// config.json
+"channels": { "telegram": { "key": "…", "token": "bot 的 token", "chat": "私聊的 chat id" } }
+```
+
+一个 bot 同时只能有一处收点击，只在一台电脑上跑，也不要给它设 Webhook。`chat` 填和本人的私聊，不要填群：卡片里常有只该本人看的内容。Telegram 没有幂等键，发送成功但报告丢了时可能重发一条。
+
 **只会发文字的（钉钉、企微的群机器人，Slack、Discord 的 Webhook）**：用 `plugins/webhook/channel.ts`，`config.json` 的通道项写 `"use": "webhook"`、`"platform": "dingtalk"` 和 `"url": "已有的 Webhook 地址"`；平台也可选 `wecom`、`slack`、`discord`。`rules.json` 里写 `"links": true`，卡片链接本身就能回答；`config.json` 的 `hub.publicUrl` 要配成手机或电脑能打开的地址。
 
 **有按钮的新通道**：在 `~/.agent-autoloop/plugins/<名字>/channel.ts` 写一个，照 `plugins/feishu/channel.ts`：循环领卡片、发或改、报告；收到点击转给 `hub.answer`。协议在 `docs/protocol.md`，用别的语言写也行，只要会发 HTTP。
