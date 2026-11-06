@@ -1,6 +1,7 @@
 // What the three languages change, end to end. Failure cases: a prompt in one language tells an agent to start its last
 // message with words the worker doesn't read, so a failed round counts as done and is never tried again; the hub's own
-// words don't follow the rules' language; the command line doesn't speak the language of the rules it runs with.
+// words don't follow the rules' language, or follow the process's instead, so one decision says different things; the
+// command line doesn't speak the language of the rules it runs with.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -64,6 +65,21 @@ test("the hub's own words follow the rules' language, whatever the process speak
         (error: Error) => ((said[language] = error.message), true),
       );
     }
+    // What the kernel checks events with says it in the rules' language too, not in the one the process speaks.
+    const rules = { ...parseRules(fixture, 0, "UTC"), language: "zh-TW" };
+    const environment = { secret: "s", publicUrl: "x" };
+    const view = evolve(empty(), decide(empty(), { type: "rules", args: [rules] }, 1, environment).facts);
+    const refused = new Set<string>();
+    for (const language of ["zh-CN", "en"] as Language[]) {
+      speak(language);
+      assert.throws(
+        () => decide(view, { type: "ingest", args: ["app", { id: "1", type: "Bad Type" }] }, 2, environment),
+        (error: Error) => (refused.add(error.message), true),
+      );
+    }
+    speak("zh-CN");
+    assert.equal(refused.size, 1, [...refused].join(" / "));
+    assert.match([...refused][0], /型別只能用|type 只能用小寫/);
     assert.equal(said["zh-CN"], "没有这张卡片");
     assert.equal(said["zh-TW"], "沒有這張卡片");
     assert.ok(said.en && !CJK.test(said.en), said.en);

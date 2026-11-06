@@ -1,7 +1,7 @@
 // The protocol's own checks, with no state behind them: the hub applies them at its door, and a worker applies them to
 // an Agent's receipt before handing it in, while the Agent can still be asked to write it again.
 import { InputError } from "../kernel/errors.ts";
-import { t } from "../words/words.ts";
+import { t as spoken, type Words } from "../words/words.ts";
 
 export const EVENT_TYPE = /^[a-z][a-z0-9_.-]{0,63}$/;
 /** What the protocol allows a card answer to carry: the schema says so, and the hub keeps it. */
@@ -50,7 +50,8 @@ export type EventInput = {
 const LIMITS = { id: 200, subject: 100, summary: 200, detail: 4000, link: 500 } as const;
 const FIELDS = ["id", "type", "subject", "summary", "detail", "link", "hops"];
 
-export function parseEvent(input: unknown): EventInput {
+/** `t` says what's wrong: the kernel passes the rules' language, which the process's may not be. */
+export function parseEvent(input: unknown, t: Words = spoken): EventInput {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     throw new InputError(t`事件要是一个 JSON 对象`);
   }
@@ -153,7 +154,7 @@ const validUsage = (usage: unknown) =>
   (isItem(usage) &&
     Object.values(usage as Item).every((count) => typeof count === "number" && Number.isFinite(count) && count >= 0));
 
-export function parseResult(input: unknown): Result {
+export function parseResult(input: unknown, t: Words = spoken): Result {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     throw new InputError(t`结果要是一个 JSON 对象`);
   }
@@ -182,7 +183,7 @@ export function parseResult(input: unknown): Result {
   }
   if (result.events !== undefined) {
     if (!items(result.events, 100)) throw new InputError(t`events 最多 100 项`);
-    result.events = result.events.map(parseEvent);
+    result.events = result.events.map((event) => parseEvent(event, t));
   }
   return result as Result;
 }

@@ -219,7 +219,7 @@ function recordEvent(draft: Draft, source: string, event: Row, routed: string[],
 }
 
 function ingest(draft: Draft, source: string, given: unknown) {
-  const event = parseEvent(given);
+  const event = parseEvent(given, t);
   const existing = rows(draft.view, "events", { source, key: event.id })[0];
   if (existing) {
     const skipped: string[] = JSON.parse(existing.paused ?? "[]");
@@ -445,7 +445,7 @@ function finish(draft: Draft, id: number, token: string, given: unknown) {
     return { rejected: JSON.parse(prior.last_answer ?? "[]"), duplicate: true };
   }
   const run = heldRun(draft, id, token, ["claimed", "unknown"]);
-  const result = parseResult(given);
+  const result = parseResult(given, t);
   const session = result.session ?? run.session;
   const usage = result.usage
     ? JSON.stringify(addUsage(run.usage ? JSON.parse(run.usage) : undefined, result.usage))
@@ -634,13 +634,16 @@ const CONTROL = {
     if (pauseOf(draft.view, rule, draft.now)) throw new Conflict(t`规则「${name}」暂停中，先恢复再手动运行`);
     const source = eventRule(rule) ? rule.when.source : SCHEDULE;
     // The same checks as any event: its subject becomes the lane and goes into the prompt.
-    const event = parseEvent({
-      id: `manual:${draft.seq}`,
-      type: "run.manual",
-      subject,
-      summary: t`${by} 手动运行`,
-      detail: reason,
-    });
+    const event = parseEvent(
+      {
+        id: `manual:${draft.seq}`,
+        type: "run.manual",
+        subject,
+        summary: t`${by} 手动运行`,
+        detail: reason,
+      },
+      t,
+    );
     const eventId = recordEvent(draft, source, event, [name]);
     const run = enqueue(draft, rule, eventId, rule.parallel ? subject : "");
     // Waiting out a retry's backoff wouldn't be now: the owner asking is the go-ahead.
