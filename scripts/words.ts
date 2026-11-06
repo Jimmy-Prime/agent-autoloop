@@ -3,6 +3,7 @@
 // of date. A string is t`…`, with `t` from words/words.ts. What a plugin says is in its own folder, beside it.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { pathToFileURL } from "node:url";
 import { keyOf } from "../words/words.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -11,7 +12,8 @@ const FOLDERS = ["kernel", "host", "protocol", "worker", "cli", "plugins"];
 /** Every .ts file under these folders, tests and catalogs left out. */
 function sources(folder: string): string[] {
   return readdirSync(join(root, folder), { withFileTypes: true }).flatMap((entry) => {
-    const path = join(folder, entry.name);
+    // With / on every system: which plugin a file belongs to is read from it.
+    const path = `${folder}/${entry.name}`;
     if (entry.isDirectory()) return sources(path);
     return entry.name.endsWith(".ts") && !/^(en|zh-TW)\.ts$/.test(entry.name) ? [path] : [];
   });
@@ -159,7 +161,8 @@ const same = (a: Record<string, string>, b: Record<string, string>) =>
 
 async function readCatalog(folder: string, language: string): Promise<Record<string, string>> {
   try {
-    return (await import(join(root, folder, `${language}.ts`))).default;
+    // As a URL: Windows' C:\ paths aren't import specifiers.
+    return (await import(pathToFileURL(join(root, folder, `${language}.ts`)).href)).default;
   } catch {
     return {};
   }
