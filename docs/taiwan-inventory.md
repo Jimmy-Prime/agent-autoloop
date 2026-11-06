@@ -29,6 +29,7 @@
 | 3b：程式字串三語 | 已 commit。約 600 條 `` t`…` ``；繁中由 `scripts/words.ts` 產生，英文手工（Codex 翻、我驗收）；`install.sh` 自己的訊息也三語 |
 | 3c：文件三語 | 已 commit。繁中文件由 `scripts/docs.ts` 產生；英文文件 13 份（Codex、Cursor Agent 翻，我驗收）；架構圖加上 Telegram |
 | 4：場景模板、README 的 Agent 表 | 未開始 |
+| 同步上游 | 2026-11-06 合併上游 main `ed748d3`（v1.6.0 之後：原生 Windows、發版政策、待複查任務）。`install.ps1` 指向這個 fork、照 Windows 顯示語言選語言；Windows 只有靜態檢查，還沒在 Windows 上實跑 |
 
 ---
 
