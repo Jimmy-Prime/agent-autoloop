@@ -1,10 +1,11 @@
 // Failure modes: empty/failed reviews pass; findings are unhandled but attested; Codex reads developer
 // config or memories, writes files, sees credentials, or executes a PR's programs/settings. Review receives a text snapshot;
 // what an octopus merge brings never reaches the reviewer, so it passes unseen; Git escapes a Chinese path so it matches no
-// pattern; a root file named like a commit is taken for one and the review can't finish.
+// pattern; a root file named like a commit is taken for one and the review can't finish; points written under a Traditional
+// Chinese or English heading aren't found.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseReview, codexCommand, reviewSnapshot } from "../plugins/delivery/review.ts";
+import { parseReview, codexCommand, reviewPoints, reviewSnapshot } from "../plugins/delivery/review.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -153,4 +154,10 @@ test("a root file named like a commit is reviewed as a file", async () => {
   assert.deepEqual(await p.review(p.commit()), []);
   assert.ok(p.reviewed());
   assert.match(p.changes(), /named like a commit/);
+});
+
+test("the review points may be headed in Simplified, Traditional Chinese or English", () => {
+  for (const heading of ["## 审查要点", "## 審查要點", "## Review checklist"])
+    assert.equal(reviewPoints(`# 项目\n\n${heading}\n- 不丢数据\n\n## 别的\n无关`), "- 不丢数据");
+  assert.equal(reviewPoints("## 别的\n无关"), undefined);
 });

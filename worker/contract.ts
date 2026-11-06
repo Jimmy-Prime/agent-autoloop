@@ -6,8 +6,9 @@ import { InputError } from "../kernel/errors.ts";
 import type { Job } from "../protocol/job.ts";
 import { parseResult, type Result } from "../protocol/validate.ts";
 
-const FAILED = ["没跑成", "FAILED"];
-const NOTHING = ["没事可做", "NOTHING"];
+// Agents told in Traditional Chinese answer in it: 沒 is not 没, and a failed run read as done would never be retried.
+const FAILED = ["没跑成", "沒跑成", "FAILED"];
+const NOTHING = ["没事可做", "沒事可做", "NOTHING"];
 const RECEIPT_FIELDS = ["ask", "notice", "resolve", "later", "events"];
 const BLOCK = /```agent-autoloop[ \t]*\r?\n([\s\S]*?)```/g;
 const unique = <T>(items: T[]) => [...new Set(items)];

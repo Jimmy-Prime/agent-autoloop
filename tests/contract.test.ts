@@ -1,6 +1,6 @@
 // What a run is told and how its last message is read: the only thing an Agent has to get right. Failure cases: the prompt
 // carries what someone wrote into an event, or lacks the rule's skill, its words or how to end; a last message saying it
-// couldn't work, or that there was nothing to do, is taken as work done; a heading or a receipt ends up in the summary; a
+// couldn't work, or that there was nothing to do, is taken as work done, also when it says so in Traditional Chinese; a heading or a receipt ends up in the summary; a
 // receipt that doesn't parse, has unknown fields or breaks the protocol's limits is applied rather than sent back to be
 // rewritten; the receipt isn't found when the message says something after it, or a code block of another kind is taken for
 // one; a result longer than the hub takes is sent as it is; a browser/login block is reported as retryable failure.
@@ -125,6 +125,11 @@ test("the first line says how it ended", () => {
   assert.deepEqual(readMessage("FAILED: no network"), { outcome: "failed", error: "no network" });
   assert.deepEqual(readMessage("NOTHING: all quiet"), { outcome: "nothing", summary: "all quiet" });
   assert.deepEqual(readMessage(""), { outcome: "failed", error: "没留下结果" });
+});
+
+test("a first line in Traditional Chinese says how it ended too", () => {
+  assert.deepEqual(readMessage("沒跑成：連不上資料庫。"), { outcome: "failed", error: "連不上資料庫。" });
+  assert.deepEqual(readMessage("**沒事可做**：已經恢復了"), { outcome: "nothing", summary: "已經恢復了" });
 });
 
 test("the receipt is the last code block of its kind, wherever it sits", () => {

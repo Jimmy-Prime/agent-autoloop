@@ -49,6 +49,14 @@ export function codexCommand(output: string, effort: string) {
   ];
 }
 
+/** What main asks reviewers to check: the section under its heading, which projects write in their own language. */
+export function reviewPoints(file: string) {
+  return (
+    file.match(/^## (?:审查要点|審查要點|Review checklist)\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1]?.trim() ||
+    undefined
+  );
+}
+
 export async function reviewSnapshot(bare: string, snapshot: string, main: string, head: string, config: Settings) {
   // Git can't show what a merge of three or more parents brought: neither its paths nor its diff would reach the reviewer.
   if (git(bare, "rev-list", "--min-parents=3", head, "--not", main)) {
@@ -80,7 +88,7 @@ export async function reviewSnapshot(bare: string, snapshot: string, main: strin
     .map((sha) => git(bare, "show", "--remerge-diff", "--no-renames", "--no-ext-diff", "--no-textconv", sha, "--"))
     .join("\n\n");
   const pointsFile = git(bare, "show", `${main}:${config.review.points}`);
-  const points = pointsFile.match(/^## 审查要点\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1]?.trim();
+  const points = reviewPoints(pointsFile);
   if (!points) throw new Error("main 上没有审查要点");
   mkdirSync(snapshot, { recursive: true });
   const changesFile = join(snapshot, "changes.txt");
