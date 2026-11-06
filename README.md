@@ -2,7 +2,7 @@
 
 **让你的命令行 Agent 在后台自己接活、自己跟进到底；平时不烦你，遇到拿不准的事才发卡片找你拍板。**
 
-**中文** | [English](README.en.md)
+**简体中文** | [繁體中文](README.zh-TW.md) | [English](README.en.md)
 
 > 这是 [KKKKhazix/agent-autoloop](https://github.com/KKKKhazix/agent-autoloop) 的 fork：补上台湾、美国常用的软件（先做 Telegram），并提供繁体中文与英文界面。安装与 `update` 跟着这个 fork 自己的 Release。
 

@@ -62,6 +62,8 @@ for (const [files, expected] of [
   [["README.md"], "docs"],
   [["README.en.md", "INSTALL.md", "SECURITY.md", "CONTRIBUTING.md", "AGENTS.md", "LICENSE"], "docs"],
   [["docs/protocol.md", ".github/pull_request_template.md"], "docs"],
+  [["README.zh-TW.md", "INSTALL.en.md", "INSTALL.zh-TW.md", "SECURITY.en.md", "SECURITY.zh-TW.md"], "docs"],
+  [["CONTRIBUTING.en.md", "CONTRIBUTING.zh-TW.md", "docs/protocol.en.md", "docs/architecture.zh-TW.svg"], "docs"],
   [["docs/plugins.md"], "normal"],
   [["worker/worker.ts", "cli/main.ts", "host/up.ts", "plugins/feishu/channel.ts", "tests/http.test.ts"], "normal"],
   [

@@ -2,7 +2,7 @@
 
 **Let your command-line agents pick up work and follow it through in the background — staying quiet when they can handle it, and sending you a card only when a decision is yours to make.**
 
-[中文](README.md) | **English**
+[简体中文](README.md) | [繁體中文](README.zh-TW.md) | **English**
 
 > This is a fork of [KKKKhazix/agent-autoloop](https://github.com/KKKKhazix/agent-autoloop) that adds software common in Taiwan and the US (Telegram first) and Traditional Chinese and English interfaces. Installing and `update` follow this fork's own releases.
 
@@ -22,9 +22,9 @@ Most of us use command-line agents like Claude Code or Codex by babysitting a te
 
 ## Get started
 
-Works on macOS and Linux. You need Node 24, Git, curl, and at least one command-line agent already signed in; no GitHub account required. You can also hand the [installation guide](INSTALL.md) to your agent and let it install everything for you.
+Works on macOS and Linux. You need Node 24, Git, curl, and at least one command-line agent already signed in; no GitHub account required. You can also hand the [installation guide](INSTALL.en.md) to your agent and let it install everything for you.
 
-> **Windows: not supported yet.** Upstream is working on it; progress is in upstream's [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17). WSL2 works for now; see [INSTALL](INSTALL.md) for what to expect.
+> **Windows: not supported yet.** Upstream is working on it; progress is in upstream's [#17](https://github.com/KKKKhazix/agent-autoloop/issues/17). WSL2 works for now; see [INSTALL](INSTALL.en.md) for what to expect.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Jimmy-Prime/agent-autoloop/main/install.sh | sh
@@ -55,7 +55,7 @@ Answer: agent-autoloop answer 1 <number>
 After you answer, run agent-autoloop status to see it pick the work back up and finish.
 ```
 
-In an interactive terminal, just type the option number. In a non-interactive terminal, run `agent-autoloop answer 1 2` to pick green. Then `agent-autoloop status` shows that the agent resumed its conversation and finished, along with rounds, tokens, and cost for today and the past seven days ([how they are counted](skills/agent-autoloop/SKILL.md#看情况回答)).
+In an interactive terminal, just type the option number. In a non-interactive terminal, run `agent-autoloop answer 1 2` to pick green. Then `agent-autoloop status` shows that the agent resumed its conversation and finished, along with rounds, tokens, and cost for today and the past seven days ([how they are counted](skills/agent-autoloop/SKILL.en.md#check-status-and-answer)).
 
 ## How a piece of work flows
 
@@ -85,7 +85,7 @@ No glue code needed. Open `~/.agent-autoloop/rules.json` and, under `rules`, dec
 }
 ```
 
-External events work the same way once the source is connected. To hand new GitHub issues to Codex, first register `github` under `sources` ([guide](skills/agent-autoloop/SKILL.md#接一个事件插件)):
+External events work the same way once the source is connected. To hand new GitHub issues to Codex, first register `github` under `sources` ([guide](skills/agent-autoloop/SKILL.en.md#connect-an-event-plugin)):
 
 ```json
 {
@@ -129,19 +129,19 @@ Each recipe includes rules, a task Skill, and setup instructions (written in Chi
 
 | Task | Included workflow |
 |---|---|
-| [Morning brief](examples/recipes/morning-brief/README.md) | Summarize local notes and Git commits at 8 AM by default; write `briefs/YYYY-MM-DD.md` |
-| [GitHub issues](examples/recipes/github-issues/README.md) | Poll every five minutes, edit code locally, and notify you to review; no commits, pushes, or issue replies |
-| [Production alerts](examples/recipes/ops-alerts/README.md) | Receive an error, investigate local code, ask before restarting, and continue after your answer |
-| [User feedback](examples/recipes/feedback/README.md) | Re-read current feedback, fix, deliver and verify, then prepare a reply; ask you in Feishu and resume after your answer |
-| [Website watch](examples/recipes/website-watch/README.md) | Check status and expected content every five minutes; wake the agent on a new incident, keep ongoing failures quiet, and update the card on recovery |
-| [Feishu weekly and business brief](examples/recipes/feishu-brief/README.md) | Read selected reports and tables with your permissions at 6 PM Sunday; summarize locally and send only a short summary to Feishu |
-| [PR delivery](skills/agent-autoloop/SKILL.md#交付流水线) | Add `deliver` to a PR to review it, wait for CI, merge, wait for deployment, and verify the live version |
+| [Morning brief](examples/recipes/morning-brief/README.en.md) | Summarize local notes and Git commits at 8 AM by default; write `briefs/YYYY-MM-DD.md` |
+| [GitHub issues](examples/recipes/github-issues/README.en.md) | Poll every five minutes, edit code locally, and notify you to review; no commits, pushes, or issue replies |
+| [Production alerts](examples/recipes/ops-alerts/README.en.md) | Receive an error, investigate local code, ask before restarting, and continue after your answer |
+| [User feedback](examples/recipes/feedback/README.en.md) | Re-read current feedback, fix, deliver and verify, then prepare a reply; ask you in Feishu and resume after your answer |
+| [Website watch](examples/recipes/website-watch/README.en.md) | Check status and expected content every five minutes; wake the agent on a new incident, keep ongoing failures quiet, and update the card on recovery |
+| [Feishu weekly and business brief](examples/recipes/feishu-brief/README.en.md) | Read selected reports and tables with your permissions at 6 PM Sunday; summarize locally and send only a short summary to Feishu |
+| [PR delivery](skills/agent-autoloop/SKILL.en.md#delivery-pipeline) | Add `deliver` to a PR to review it, wait for CI, merge, wait for deployment, and verify the live version |
 
 **To enable one:** open its instructions, put the task Skill in your agent's skills directory, merge the sample rules into `~/.agent-autoloop/rules.json`, replace worker names and paths, then run `agent-autoloop check`.
 
 Feedback, website watch, and Feishu briefs default to Asia/Shanghai and send only to the owner's private Feishu chat. Sample data is fictional; scripts and receipts have been verified only with local HTTP and a fake Feishu CLI, not run end to end on a live account.
 
-More: [Claude-to-Codex browser handoff](examples/recipes/browser-handoff/README.md), [weekly code cleanup](examples/skills/weekly-sweep/SKILL.md), [ship a PR](examples/skills/ship-pr/SKILL.md).
+More: [Claude-to-Codex browser handoff](examples/recipes/browser-handoff/README.en.md), [weekly code cleanup](examples/skills/weekly-sweep/SKILL.md), [ship a PR](examples/skills/ship-pr/SKILL.md).
 
 ## Plugin ecosystem: swap any of the four sides
 
@@ -149,10 +149,10 @@ Built-in plugins ship with the program and are enabled through configuration. Us
 
 | Side | Built in | Setup |
 |---|---|---|
-| **Events**: how work is found | [GitHub Webhook](plugins/github/source.ts), [GitLab Webhook](plugins/gitlab/source.ts), [HTTP API](docs/protocol.md#来源把世界变成事件), [cron rules](skills/agent-autoloop/SKILL.md#改规则), [issue polling script](examples/watch-github-issues.sh) | [Guide](skills/agent-autoloop/SKILL.md#接一个事件插件) |
-| **Agents**: who does the work | [Claude Code](plugins/claude/agent.ts), [Codex](plugins/codex/agent.ts), [ACP](plugins/acp/agent.ts), [DeepSeek Harness](plugins/dsh/agent.ts), [generic command](plugins/command/agent.ts) | [Guide](skills/agent-autoloop/SKILL.md#接一个-agent) |
-| **Channels**: how cards reach you | [Desktop notifications](plugins/desktop/channel.ts) (on by default), [Telegram](plugins/telegram/channel.ts), [Feishu](plugins/feishu/channel.ts), [DingTalk / WeCom / Slack / Discord](plugins/webhook/templates.ts) | [Guide](skills/agent-autoloop/SKILL.md#接一个通道) |
-| **Delivery**: CI/CD as a plugin | [`delivery`](plugins/delivery/delivery.ts) | [Guide](skills/agent-autoloop/SKILL.md#交付流水线) |
+| **Events**: how work is found | [GitHub Webhook](plugins/github/source.ts), [GitLab Webhook](plugins/gitlab/source.ts), [HTTP API](docs/protocol.en.md#sources-turn-the-world-into-events), [cron rules](skills/agent-autoloop/SKILL.en.md#change-the-rules), [issue polling script](examples/watch-github-issues.sh) | [Guide](skills/agent-autoloop/SKILL.en.md#connect-an-event-plugin) |
+| **Agents**: who does the work | [Claude Code](plugins/claude/agent.ts), [Codex](plugins/codex/agent.ts), [ACP](plugins/acp/agent.ts), [DeepSeek Harness](plugins/dsh/agent.ts), [generic command](plugins/command/agent.ts) | [Guide](skills/agent-autoloop/SKILL.en.md#connect-an-agent) |
+| **Channels**: how cards reach you | [Desktop notifications](plugins/desktop/channel.ts) (on by default), [Telegram](plugins/telegram/channel.ts), [Feishu](plugins/feishu/channel.ts), [DingTalk / WeCom / Slack / Discord](plugins/webhook/templates.ts) | [Guide](skills/agent-autoloop/SKILL.en.md#connect-a-channel) |
+| **Delivery**: CI/CD as a plugin | [`delivery`](plugins/delivery/delivery.ts) | [Guide](skills/agent-autoloop/SKILL.en.md#delivery-pipeline) |
 
 **What has been tested:** Claude Code, Codex, and ACP (with the official Codex ACP adapter) have run multi-turn Q&A and session resumption across processes. Feishu has run real delivery, button callbacks, and card updates. Telegram has only been checked against a local mock Bot API (sending, button callbacks, editing the message), not real Telegram. The four webhook templates have only been checked against local mock servers, and the GitLab webhook against the payloads in its docs, not a real GitLab. These text channels answer through a link, so `hub.publicUrl` must be reachable from your phone or computer.
 
@@ -169,7 +169,7 @@ Built-in plugins ship with the program and are enabled through configuration. Us
 
 **Delivery pipeline.** Add the `deliver` label to a GitHub PR and it follows through to release: **review → wait for CI → merge → wait for deploy → verify the live version**. Settings are read only from `main`, and PR code is never checked out or run on the worker machine. Queueing, concurrency, and retries come from the kernel.
 
-**Write your own.** Start from the runnable [agent](examples/plugins/hello-agent/agent.ts), [channel](examples/plugins/hello-channel/channel.ts), and [event](examples/plugins/hello-source/source.ts) templates and the [plugin guide](docs/plugins.md). For web tasks, read [browser access](docs/plugins.md#浏览器接入) first. The CLI and [MCP](skills/agent-autoloop/SKILL.md#mcp-与密钥撤销) can also inspect and answer cards.
+**Write your own.** Start from the runnable [agent](examples/plugins/hello-agent/agent.ts), [channel](examples/plugins/hello-channel/channel.ts), and [event](examples/plugins/hello-source/source.ts) templates and the [plugin guide](docs/plugins.en.md). For web tasks, read [browser access](docs/plugins.en.md#browser-access) first. The CLI and [MCP](skills/agent-autoloop/SKILL.en.md#mcp-and-revoking-keys) can also inspect and answer cards.
 
 ## Four kernel mechanisms
 
@@ -215,7 +215,7 @@ Apple M5 Pro, 24 GB, Node 24.21.0. Each write is a separate request, acknowledge
 | Kernel lines (with comments and blanks) | about 1,650 |
 | Runtime dependencies | 0 |
 
-As history grows, the status summary slows down and the log and indexes keep using disk. The first start after a format change rebuilds from the log, which took 43.1 seconds for 1.1 million facts. [Full numbers and method](docs/protocol.md#历史增长实测) (in Chinese).
+As history grows, the status summary slows down and the log and indexes keep using disk. The first start after a format change rebuilds from the log, which took 43.1 seconds for 1.1 million facts. [Full numbers and method](docs/protocol.en.md#history-growth-measurements) (in Chinese).
 
 ## Usage and provider terms
 
@@ -225,12 +225,12 @@ For automated workloads, providers generally recommend using API keys rather tha
 
 ## Documentation
 
-- [Installation guide](INSTALL.md)
-- [Configuration & delivery pipeline manual](skills/agent-autoloop/SKILL.md)
-- [Writing plugins](docs/plugins.md)
-- [Full HTTP protocol specification](docs/protocol.md)
-- [Security boundaries](SECURITY.md)
-- [Contributing and community](CONTRIBUTING.md)
+- [Installation guide](INSTALL.en.md)
+- [Configuration & delivery pipeline manual](skills/agent-autoloop/SKILL.en.md)
+- [Writing plugins](docs/plugins.en.md)
+- [Full HTTP protocol specification](docs/protocol.en.md)
+- [Security boundaries](SECURITY.en.md)
+- [Contributing and community](CONTRIBUTING.en.md)
 - [Development guidelines](AGENTS.md)
 
 <details>
@@ -252,7 +252,7 @@ For automated workloads, providers generally recommend using API keys rather tha
 | `scripts/`, `.github/workflows/` | Performance and real-agent checks, installation smoke scripts, and Linux / macOS CI |
 | Root documents and `install.sh` | Chinese / English READMEs, installation, security, development guidelines, license, and installer |
 
-Start reading at `bin/agent-autoloop.ts` → `cli/main.ts`, then follow the feature into `host/`, `worker/`, or `plugins/`. Read the [protocol](docs/protocol.md) for kernel design. Similarly named files serve different layers: `host/http.ts` adapts Node requests while `kernel/http.ts` defines endpoint behavior; `protocol/rules.ts` validates input while `kernel/rules.ts` defines rule types and matching.
+Start reading at `bin/agent-autoloop.ts` → `cli/main.ts`, then follow the feature into `host/`, `worker/`, or `plugins/`. Read the [protocol](docs/protocol.en.md) for kernel design. Similarly named files serve different layers: `host/http.ts` adapts Node requests while `kernel/http.ts` defines endpoint behavior; `protocol/rules.ts` validates input while `kernel/rules.ts` defines rule types and matching.
 
 </details>
 

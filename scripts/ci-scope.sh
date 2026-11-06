@@ -25,6 +25,8 @@ while IFS= read -r file; do
     # tests/example-plugins.test.ts runs the commands in this tutorial.
     docs/plugins.md) kind=normal ;;
     README.md | README.en.md | INSTALL.md | SECURITY.md | CONTRIBUTING.md | AGENTS.md | LICENSE) kind=docs ;;
+    # What scripts/docs.ts makes and the English kept by hand: no test reads them.
+    README.zh-TW.md | INSTALL.*.md | SECURITY.*.md | CONTRIBUTING.*.md) kind=docs ;;
     docs/* | .github/ISSUE_TEMPLATE/* | .github/pull_request_template.md) kind=docs ;;
     tests/simulation.test.ts | sim/enumerate.ts) kind=full ;;
     kernel/* | protocol/* | words/words.ts | sim/random.ts | sim/world.ts | sim/invariants.ts) kind=kernel ;;

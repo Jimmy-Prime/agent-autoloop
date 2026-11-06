@@ -25,7 +25,9 @@
 | 0：fork 基礎（§1） | 已 commit。安裝、`update`、連結都指向 `Jimmy-Prime/agent-autoloop`；Windows 段落改寫；README 加 fork 說明。在上游正式版的安裝上跑這個 fork 的安裝指令，會改成跟著這個 fork 的 Release（Codex 審查時找到：原本會失敗） |
 | 1：協議字繁簡雙收（§3.2 前三項中的兩項） | 已 commit。第一行認「沒跑成」「沒事可做」；審查要點認 `## 審查要點`、`## Review checklist`。「已处理」「试跑」「试一下」併到批次 3，因為它們是我們自己產生的字，跟著語言切換一起改 |
 | 2：Telegram 通道 | 已 commit。`plugins/telegram/channel.ts`，只在本機假 Bot API 上測過。架構圖還沒加 Telegram，併到批次 3 重畫 |
-| 3：多語系 | 設計已確認（§5），未開始 |
+| 3a：語言設定一路傳下去 | 已 commit。`rules.json` 的 `language` 傳到內核、Job、卡片、`/v1/state`；`init --language`；安裝時照 `LANG` 選 |
+| 3b：程式字串三語 | 已 commit。約 600 條 `` t`…` ``；繁中由 `scripts/words.ts` 產生，英文手工（Codex 翻、我驗收）；`install.sh` 自己的訊息也三語 |
+| 3c：文件三語 | 已 commit。繁中文件由 `scripts/docs.ts` 產生；英文文件 13 份（Codex、Cursor Agent 翻，我驗收）；架構圖加上 Telegram |
 | 4：場景模板、README 的 Agent 表 | 未開始 |
 
 ---
@@ -276,3 +278,29 @@ GitHub、GitLab Webhook 和通用 HTTP `/v1/events` 本來就是全球通用的�
 |---|---|---|
 | Codex 審查批次 0–2 | Telegram 點擊轉給中控台失敗時（例如中控台暫時連不上），這次點擊不會自動補送；使用者會看到「沒記上」，要再點一次。若中控台超過 Telegram 的回覆期限才失敗，連這句提示都看不到 | 飛書通道也是一樣：點擊轉送失敗只記日誌。通道通常和中控台在同一個行程裡，連不上的機會很低 |
 | Codex 審查批次 0–2 | Telegram 回 429 時沒照 `retry_after` 等，靠中控台原本的退避重試 | 不會把失敗當成功；個人用量碰不到頻率上限 |
+
+### 批次 3 跟 §5 設計不同的地方
+
+| 設計 | 實際 | 原因 |
+|---|---|---|
+| 安裝進 Agent 的 SKILL 依語言選版本 | Agent 讀的 `SKILL.md` 維持簡體；給人看的另有 `SKILL.zh-TW.md`、`SKILL.en.md` | `init` 把整個 skill 目錄用 symlink 連過去，沒辦法依語言挑檔案；Agent 看得懂簡體，提示詞會要它用規則的語言寫結論和卡片 |
+| 安裝時用 `init --language` | 用環境變數 `AGENT_AUTOLOOP_LANGUAGE` 傳 | Codex 審查 3a 找到：安裝腳本來自 `main`、程式是較舊的 Release 時，舊版 `init` 會拒絕不認識的參數 |
+| 內建插件跟核心共用翻譯檔 | 每個內建插件自己帶 `en.ts`、`zh-TW.ts` | 內核引用的翻譯檔不該出現產品名字；插件也能自成一包 |
+
+### 批次 3 刻意沒翻的
+
+| 什麼 | 為什麼 |
+|---|---|
+| `plugins/delivery/action.ts`、`project.ts` | 註解約定它們只依賴 Node 和同一個資料夾，給 Ship Action 用；它們的字多半只出現在 GitHub Actions 的紀錄 |
+| `examples/recipes/` 裡的腳本（`collect.ts`、`handoff.ts`、`check.ts`） | 範例，使用者會照自己的需要改；其中有些字會被比對（例如飛書摘要找「请恢复飞书资料读取」這張卡片） |
+| 服務設定範本（systemd unit、launchd plist） | 是設定檔，不是介面；跟著語言變的話，換語言就會被當成服務設定改了 |
+| `AGENTS.md`、`.github/` 的 Issue 和 PR 範本、場景模板的 `SKILL.md` | 給改這個 repo 或執行任務的 Agent 看的，跟上游流程綁在一起 |
+| 存下來的「誰做的」（`by: "本人"`、`"链接"`） | 是資料不是介面，改了會讓新舊紀錄不一致 |
+
+### 批次 3 記下、暫不修
+
+| 情況 | 為什麼先不修 |
+|---|---|
+| 改了簡體文件卻沒重產繁中版，純文件的 PR 不會被擋 | 要讓測試讀文件，就得把所有文件改成會跑測試的分流；合進 `main` 後的快速測試也不讀文件。改文件時照 AGENTS.md 跑 `node scripts/docs.ts` |
+| 英文文件要手動跟上簡體版 | 沒有可靠的自動翻譯；上游改了文件就要補 |
+| 中控台在跑的時候改了 `language`，已經在跑的那一輪照舊用原來的語言 | 新的一輪就會用新語言 |

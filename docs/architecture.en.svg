@@ -137,14 +137,16 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <rect class="plug" x="390" y="452" width="548" height="92" rx="14"/>
 <text x="410" y="480" class="h2">Channel plugins</text>
 <text x="560" y="480" class="s">Deliver cards to your hand</text>
-<rect class="item" x="410" y="494" width="104" height="36" rx="8"/>
-<text x="462" y="517" class="r" text-anchor="middle">Desktop</text>
-<rect class="item" x="524" y="494" width="90" height="36" rx="8"/>
-<text x="569" y="517" class="r" text-anchor="middle">Feishu</text>
-<rect class="item" x="624" y="494" width="150" height="36" rx="8"/>
-<text x="699" y="517" class="r" text-anchor="middle">DingTalk · WeCom</text>
-<rect class="item" x="784" y="494" width="134" height="36" rx="8"/>
-<text x="851" y="517" class="r" text-anchor="middle">Slack · Discord</text>
+<rect class="item" x="410" y="494" width="76" height="36" rx="8"/>
+<text x="448" y="517" class="r" text-anchor="middle">Desktop</text>
+<rect class="item" x="494" y="494" width="84" height="36" rx="8"/>
+<text x="536" y="517" class="r" text-anchor="middle">Telegram</text>
+<rect class="item" x="586" y="494" width="116" height="36" rx="8"/>
+<text x="644" y="517" class="r" text-anchor="middle">Slack · Discord</text>
+<rect class="item" x="710" y="494" width="68" height="36" rx="8"/>
+<text x="744" y="517" class="r" text-anchor="middle">Feishu</text>
+<rect class="item" x="786" y="494" width="134" height="36" rx="8"/>
+<text x="853" y="517" class="r" text-anchor="middle">DingTalk · WeCom</text>
 
 <path class="both" d="M388 498H328"/>
 <rect class="you" x="172" y="454" width="152" height="88" rx="26"/>

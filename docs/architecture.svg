@@ -137,14 +137,16 @@ text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK S
 <rect class="plug" x="390" y="452" width="548" height="92" rx="14"/>
 <text x="410" y="480" class="h2">通道插件</text>
 <text x="490" y="480" class="s">把问题卡片送到你手边</text>
-<rect class="item" x="410" y="494" width="114" height="36" rx="8"/>
-<text x="467" y="517" class="r" text-anchor="middle">桌面通知</text>
-<rect class="item" x="534" y="494" width="104" height="36" rx="8"/>
-<text x="586" y="517" class="r" text-anchor="middle">飞书</text>
-<rect class="item" x="648" y="494" width="126" height="36" rx="8"/>
-<text x="711" y="517" class="r" text-anchor="middle">钉钉 · 企微</text>
-<rect class="item" x="784" y="494" width="134" height="36" rx="8"/>
-<text x="851" y="517" class="r" text-anchor="middle">Slack · Discord</text>
+<rect class="item" x="410" y="494" width="92" height="36" rx="8"/>
+<text x="456" y="517" class="r" text-anchor="middle">桌面通知</text>
+<rect class="item" x="512" y="494" width="96" height="36" rx="8"/>
+<text x="560" y="517" class="r" text-anchor="middle">Telegram</text>
+<rect class="item" x="618" y="494" width="120" height="36" rx="8"/>
+<text x="678" y="517" class="r" text-anchor="middle">Slack · Discord</text>
+<rect class="item" x="748" y="494" width="64" height="36" rx="8"/>
+<text x="780" y="517" class="r" text-anchor="middle">飞书</text>
+<rect class="item" x="822" y="494" width="104" height="36" rx="8"/>
+<text x="874" y="517" class="r" text-anchor="middle">钉钉 · 企微</text>
 
 <path class="both" d="M388 498H328"/>
 <rect class="you" x="172" y="454" width="152" height="88" rx="26"/>
