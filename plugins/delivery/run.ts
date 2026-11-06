@@ -5,6 +5,11 @@ import { join } from "node:path";
 import { createIO } from "./github.ts";
 import { deliver, disableAuto, status } from "./delivery.ts";
 import { deliveryReceipt, question, receiptBlock, subjectNumber } from "./input.ts";
+import { tagIn, speak } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 const hasLabel = (issue: any, name: string) => issue.labels.some((label: any) => label.name === name);
 
@@ -15,12 +20,12 @@ export async function run(repo: string, context: any, testLocalHealth = false) {
   try {
     const issue = await io.api(`issues/${number}`);
     if (!issue.pull_request) {
-      if (issue.state !== "open" || !hasLabel(issue, "ask-owner")) return "没事可做：没有待处理的问题";
+      if (issue.state !== "open" || !hasLabel(issue, "ask-owner")) return t`没事可做：没有待处理的问题`;
       if (context.answers?.length) {
         await io.api(`issues/${number}/labels/ask-owner`, undefined, "DELETE");
-        return "已记录处理结果";
+        return t`已记录处理结果`;
       }
-      return `有一件事需要你处理\n${receiptBlock({ ask: [question(issue)] })}`;
+      return t`有一件事需要你处理\n${receiptBlock({ ask: [question(issue)] })}`;
     }
     try {
       const result = await deliver(repo, number, io, testLocalHealth);
@@ -37,6 +42,8 @@ export async function run(repo: string, context: any, testLocalHealth = false) {
 }
 
 if (import.meta.main) {
+  // A process of its own, started by the worker: what it says, it says in the language the worker was told.
+  speak(process.env.AGENT_AUTOLOOP_LANGUAGE);
   const [repo, ...args] = process.argv.slice(2);
   const context = JSON.parse(readFileSync(process.env.AGENT_AUTOLOOP_CONTEXT!, "utf8"));
   run(repo, context, args.includes("--test-local-health"))

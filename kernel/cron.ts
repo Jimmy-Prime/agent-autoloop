@@ -2,6 +2,8 @@
 // week both given take either, but when either starts with * a day must match both; 0 and 7 are Sunday. A wall-clock
 // moment that doesn't exist (clocks going forward) is skipped, and one that happens twice (clocks going back) counts
 // the first time, so a schedule fires at most once per wall-clock moment.
+import { words, type Language } from "../words/words.ts";
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -114,17 +116,17 @@ export function dayStart(now: number, zone: string) {
 
 // With the rest of the cron and not with the status summary: a client's own page can import this file, which needs nothing
 // of Node.
-const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六", "日"];
-
 /** A common schedule in plain words (每天 18:00, 每周日 06:00, 工作日 09:00, 每月 1 日 04:00); any other as written. */
-export function describeCron(text: string) {
+export function describeCron(text: string, language: Language = "zh-CN") {
+  const t = words(language);
+  const WEEKDAYS = [t`日`, t`一`, t`二`, t`三`, t`四`, t`五`, t`六`, t`日`];
   const [minute, hour, day, month, weekday] = text.trim().split(/\s+/);
   const number = /^\d+$/;
   if (!number.test(minute) || !number.test(hour) || month !== "*" || !parseCron(text)) return text;
   const at = `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
-  if (day === "*" && weekday === "*") return `每天 ${at}`;
-  if (day === "*" && number.test(weekday)) return `每周${WEEKDAYS[Number(weekday)]} ${at}`;
-  if (day === "*" && weekday === "1-5") return `工作日 ${at}`;
-  if (number.test(day) && weekday === "*") return `每月 ${Number(day)} 日 ${at}`;
+  if (day === "*" && weekday === "*") return t`每天 ${at}`;
+  if (day === "*" && number.test(weekday)) return t`每周${WEEKDAYS[Number(weekday)]} ${at}`;
+  if (day === "*" && weekday === "1-5") return t`工作日 ${at}`;
+  if (number.test(day) && weekday === "*") return t`每月 ${Number(day)} 日 ${at}`;
   return text;
 }

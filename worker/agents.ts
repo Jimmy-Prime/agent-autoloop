@@ -7,6 +7,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { loadPlugin } from "../host/plugins.ts";
 import type { Usage } from "../protocol/validate.ts";
+import { t } from "../words/words.ts";
 
 export type { Usage } from "../protocol/validate.ts";
 export type Access = "read" | "edit" | "full";
@@ -75,7 +76,7 @@ export function findProgram(name: string, elsewhere: () => string[] = () => []) 
     found.set(name, onPath ?? elsewhere().find(existsSync) ?? null);
   }
   const program = found.get(name);
-  if (!program) throw new Error(`找不到 ${name}：先装好并登录`);
+  if (!program) throw new Error(t`找不到 ${name}：先装好并登录`);
   return program;
 }
 

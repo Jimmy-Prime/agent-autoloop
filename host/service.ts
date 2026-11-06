@@ -6,6 +6,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { HOME } from "./home.ts";
 import { stablePath } from "./node-path.ts";
+import { t } from "../words/words.ts";
 
 const PROGRAM = path.join(import.meta.dirname, "..", "bin", "agent-autoloop.ts");
 /** Another install on this machine (another AGENT_AUTOLOOP_HOME) has a service of its own. */
@@ -24,7 +25,7 @@ export type UnitOptions = {
 };
 
 const systemdItem = (text: string, escapeDollar = false) => {
-  if (/[\u0000-\u001f\u007f]/u.test(text)) throw new Error("systemd unit 的值不能包含控制字符");
+  if (/[\u0000-\u001f\u007f]/u.test(text)) throw new Error(t`systemd unit 的值不能包含控制字符`);
   let escaped = text.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("%", "%%");
   if (escapeDollar) escaped = escaped.replaceAll("$", () => "$$");
   return `"${escaped}"`;
@@ -155,5 +156,5 @@ export function systemUnit() {
 export function restartService() {
   if (serviceRunning()) return void installService();
   const name = systemUnit();
-  return name ? `这台电脑用的是系统级服务，运行 systemctl restart ${name} 才会用上新版。` : undefined;
+  return name ? t`这台电脑用的是系统级服务，运行 systemctl restart ${name} 才会用上新版。` : undefined;
 }

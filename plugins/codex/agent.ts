@@ -2,6 +2,11 @@
 // on disk, so a retry or an answer can go on in it, and the link opens it in the app.
 import { execFileSync } from "node:child_process";
 import { findProgram, tail, type Adapter } from "../../worker/agents.ts";
+import { tagIn } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 const SANDBOX = { read: "read-only", edit: "workspace-write", full: "danger-full-access" };
 export const IN_THE_APP = [
@@ -24,9 +29,9 @@ export default {
     "-c",
     'approval_policy="never"',
     ...(turn.resume ? [turn.resume] : []),
-    "本轮通过后台 codex exec 运行，不要假定桌面应用的浏览器连接已带到本轮。" +
-      "网页操作使用本轮实际可用的浏览器工具，或使用规则或 Skill 中已明确配置的浏览器入口。" +
-      "沿用该入口的会话，只交网页步骤，业务处理和中台回执仍由本轮负责；没有可用入口或需要本人恢复连接时，按待你处理的约定交回。\n\n" +
+    t`本轮通过后台 codex exec 运行，不要假定桌面应用的浏览器连接已带到本轮。` +
+      t`网页操作使用本轮实际可用的浏览器工具，或使用规则或 Skill 中已明确配置的浏览器入口。` +
+      t`沿用该入口的会话，只交网页步骤，业务处理和中台回执仍由本轮负责；没有可用入口或需要本人恢复连接时，按待你处理的约定交回。\n\n` +
       turn.prompt,
   ],
   read(stdout, code, stderr) {
@@ -57,14 +62,14 @@ export default {
         seen.sessionUsage = { input: input_tokens, output: output_tokens, cached: cached_input_tokens };
       } else if (event.type === "turn.failed") {
         seen.finished = true;
-        seen.error = event.error?.message || "Codex 没跑完这一轮";
+        seen.error = event.error?.message || t`Codex 没跑完这一轮`;
       } else if (event.type === "error") seen.error = event.message;
     }
     const { completed, ...reading } = seen;
     // Only a finished turn's last message is its answer; before that it's only as far as it had got.
     if (!completed) delete reading.text;
-    if (code !== null && !completed && !reading.error) reading.error = tail(stderr) || "Codex 没有完成并留下实际结果";
-    if (completed && !reading.text?.trim()) reading.error = "Codex 没有完成并留下实际结果";
+    if (code !== null && !completed && !reading.error) reading.error = tail(stderr) || t`Codex 没有完成并留下实际结果`;
+    if (completed && !reading.text?.trim()) reading.error = t`Codex 没有完成并留下实际结果`;
     return reading;
   },
   link: (session) => `codex://threads/${session}`,
@@ -77,7 +82,7 @@ export default {
       );
       return null;
     } catch (error) {
-      return `Codex 没有登录或用不了：运行 codex login（${(error as Error).message.split("\n")[0]}）`;
+      return t`Codex 没有登录或用不了：运行 codex login（${(error as Error).message.split("\n")[0]}）`;
     }
   },
 } satisfies Adapter;

@@ -4,6 +4,11 @@ import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import { findProgram, tail, type Adapter } from "../../worker/agents.ts";
+import { tagIn } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 const PERMISSIONS = { read: "plan", edit: "acceptEdits", full: "bypassPermissions" };
 
@@ -68,7 +73,7 @@ export default {
       // Its messages are what it was doing, not what went wrong.
       return code === null
         ? known
-        : { ...known, error: tail(stderr || (messages.length ? "" : stdout)) || "没留下结果" };
+        : { ...known, error: tail(stderr || (messages.length ? "" : stdout)) || t`没留下结果` };
     }
     const usage = result.usage
       ? {
@@ -81,7 +86,7 @@ export default {
     const sessionUsage = result.total_cost_usd === undefined ? undefined : { cost: result.total_cost_usd };
     const said = String(result.result ?? "");
     if (result.is_error || result.subtype !== "success") {
-      const error = said.split("\n")[0] || result.errors?.[0] || result.subtype || "没留下结果";
+      const error = said.split("\n")[0] || result.errors?.[0] || result.subtype || t`没留下结果`;
       return { ...known, usage, sessionUsage, finished: true, error };
     }
     return { text: said, ...known, usage, sessionUsage, finished: true };
@@ -91,9 +96,9 @@ export default {
     try {
       const program = findProgram("claude", inTheApp);
       const status = JSON.parse(execFileSync(program, ["auth", "status"], { encoding: "utf8", timeout: 20_000 }));
-      return status.loggedIn ? null : "Claude Code 没有登录：运行 claude auth login";
+      return status.loggedIn ? null : t`Claude Code 没有登录：运行 claude auth login`;
     } catch (error) {
-      return `Claude Code 用不了：${(error as Error).message.split("\n")[0]}`;
+      return t`Claude Code 用不了：${(error as Error).message.split("\n")[0]}`;
     }
   },
 } satisfies Adapter;

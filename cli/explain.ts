@@ -1,5 +1,6 @@
 // `rules explain` and `emit --dry-run`: what this machine's rules file says, without asking a hub or writing a fact.
 import { describeCron, nextRun, parseCron } from "../kernel/cron.ts";
+import { spoken, t } from "../words/words.ts";
 import { cronOf, eventRule, typeMatches, type Rule, type Rules } from "../kernel/rules.ts";
 import { parseRules } from "../protocol/rules.ts";
 import { parseEvent } from "../protocol/validate.ts";
@@ -9,20 +10,20 @@ const clock = (zone: string) =>
   ({ timeZone: zone, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) as const;
 const when = (rule: Rule, rules: Rules, now: number) =>
   eventRule(rule)
-    ? `来源 ${rule.when.source} · ${rule.when.types.join("、")}`
-    : `定时 ${describeCron(cronOf(rule))}（下次 ${new Date(
+    ? t`来源 ${rule.when.source} · ${rule.when.types.join(t`、`)}`
+    : t`定时 ${describeCron(cronOf(rule), spoken())}（下次 ${new Date(
         nextRun(parseCron(cronOf(rule))!, now, rules.timezone)!,
-      ).toLocaleString("zh-CN", clock(rules.timezone))}）`;
+      ).toLocaleString(spoken(), clock(rules.timezone))}）`;
 
 function details(rule: Rule, rules: Rules, now: number) {
   const parts = [when(rule, rules, now), `→ ${rule.to}`, rule.cwd];
-  if (rule.parallel) parts.push(`并发 ${rule.parallel}`);
-  if (rule.resume) parts.push("接着上一轮的会话");
-  if (rule.group !== rule.name) parts.push(`组 ${rule.group}`);
-  if (rule.tell !== "needed") parts.push(`通知 ${rule.tell}`);
-  if (rule.skill) parts.push("有 Skill");
-  if (rule.prompt) parts.push("有 Prompt");
-  if (rule.emits) parts.push(`可发 ${rule.emits.source} ${rule.emits.types.join("、")}`);
+  if (rule.parallel) parts.push(t`并发 ${rule.parallel}`);
+  if (rule.resume) parts.push(t`接着上一轮的会话`);
+  if (rule.group !== rule.name) parts.push(t`组 ${rule.group}`);
+  if (rule.tell !== "needed") parts.push(t`通知 ${rule.tell}`);
+  if (rule.skill) parts.push(t`有 Skill`);
+  if (rule.prompt) parts.push(t`有 Prompt`);
+  if (rule.emits) parts.push(t`可发 ${rule.emits.source} ${rule.emits.types.join(t`、`)}`);
   return parts.join(" · ");
 }
 
@@ -30,28 +31,28 @@ function details(rule: Rule, rules: Rules, now: number) {
 export function explainRules(text: string, now = Date.now(), zone = localZone()): string[] {
   const rules = parseRules(text, now, zone);
   const lines = [
-    `时区 ${rules.timezone}；先问你：${rules.askFirst.join("、")}；${rules.rules.length} 条规则`,
-    `来源：${Object.entries(rules.sources)
-      .map(([id, source]) => `${id}（${source.name}）`)
-      .join("、")}`,
-    `Agent：${Object.entries(rules.agents)
-      .map(([id, agent]) => `${id}（${agent.name}，${agent.worker}，权限 ${agent.access}）`)
-      .join("、")}`,
+    t`时区 ${rules.timezone}；先问你：${rules.askFirst.join(t`、`)}；${rules.rules.length} 条规则`,
+    t`来源：${Object.entries(rules.sources)
+      .map(([id, source]) => t`${id}（${source.name}）`)
+      .join(t`、`)}`,
+    t`Agent：${Object.entries(rules.agents)
+      .map(([id, agent]) => t`${id}（${agent.name}，${agent.worker}，权限 ${agent.access}）`)
+      .join(t`、`)}`,
   ];
   if (Object.keys(rules.channels).length)
     lines.push(
-      `通道：${Object.entries(rules.channels)
+      t`通道：${Object.entries(rules.channels)
         .map(([id, channel]) => {
-          const answerers = channel.answerers?.length ? `，回答人 ${channel.answerers.join("、")}` : "";
-          return `${id}（${channel.name}${answerers}${channel.links ? "，带链接" : ""}）`;
+          const answerers = channel.answerers?.length ? t`，回答人 ${channel.answerers.join(t`、`)}` : "";
+          return t`${id}（${channel.name}${answerers}${channel.links ? t`，带链接` : ""}）`;
         })
-        .join("、")}`,
+        .join(t`、`)}`,
     );
-  lines.push("规则：");
-  for (const rule of rules.rules) lines.push(`  ${rule.name}：${details(rule, rules, now)}`);
+  lines.push(t`规则：`);
+  for (const rule of rules.rules) lines.push(t`  ${rule.name}：${details(rule, rules, now)}`);
   for (const task of rules.elsewhere) {
-    const answers = task.cwd ? `；问你的，回答后交给 ${rules.agents[task.to].name} 在 ${task.cwd} 接着做` : "";
-    lines.push(`  ${task.name}：在别处（${task.where}）${describeCron(task.cron)}${answers}`);
+    const answers = task.cwd ? t`；问你的，回答后交给 ${rules.agents[task.to].name} 在 ${task.cwd} 接着做` : "";
+    lines.push(t`  ${task.name}：在别处（${task.where}）${describeCron(task.cron, spoken())}${answers}`);
   }
   return lines;
 }
@@ -66,16 +67,16 @@ export function previewEvent(
 ): string[] {
   const rules = parseRules(text, now, zone);
   const parsed = parseEvent(event);
-  const lines = [`事件：${source} ${parsed.type}${parsed.subject ? ` ${parsed.subject}` : ""}`];
-  if (!rules.sources[source]) lines.push(`来源 ${source} 没有登记在 rules.json 的 sources 里`);
+  const lines = [t`事件：${source} ${parsed.type}${parsed.subject ? ` ${parsed.subject}` : ""}`];
+  if (!rules.sources[source]) lines.push(t`来源 ${source} 没有登记在 rules.json 的 sources 里`);
   const matched = rules.rules.filter(
     (rule) => eventRule(rule) && rule.when.source === source && typeMatches(rule.when.types, parsed.type),
   );
   if (!matched.length) {
-    lines.push("没有规则接这条事件；真发出去会记成「没有规则接的事件」。");
+    lines.push(t`没有规则接这条事件；真发出去会记成「没有规则接的事件」。`);
     return lines;
   }
-  lines.push("会派给：");
+  lines.push(t`会派给：`);
   for (const rule of matched) lines.push(`  ${rule.name} → ${rule.to} · ${rule.cwd}`);
   return lines;
 }

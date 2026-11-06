@@ -4,6 +4,9 @@
 //                               "body": { "msgtype": "text", "text": { "content": "{text}" } } } }
 import { accepted, payload } from "./templates.ts";
 import type { Card, ChannelContext } from "../../host/channels.ts";
+import { wordsIn } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
 
 function fill(template: unknown, text: string): unknown {
   if (typeof template === "string") return template.replaceAll("{text}", () => text);
@@ -19,9 +22,10 @@ function fill(template: unknown, text: string): unknown {
 const asWords = (text: string) => text.replaceAll("](", "］(").replaceAll("<", "＜");
 
 function words(card: Card, platform = "") {
+  const t = wordsIn({ en, "zh-TW": zhTW })(card.language);
   if (platform === "wecom")
     card = { ...card, title: asWords(card.title), text: asWords(card.text), options: card.options.map(asWords) };
-  const source = platform === "wecom" && card.rule ? `来源：${asWords(card.rule)}` : "";
+  const source = platform === "wecom" && card.rule ? t`来源：${asWords(card.rule)}` : "";
   if (
     platform === "wecom" &&
     card.kind === "notice" &&
@@ -30,7 +34,7 @@ function words(card: Card, platform = "") {
     card.options.length === 1 &&
     card.link
   )
-    return [card.title, source, card.text, `[点击处理](${card.link})`].filter(Boolean).join("\n\n");
+    return [card.title, source, card.text, t`[点击处理](${card.link})`].filter(Boolean).join("\n\n");
   const choices = card.options.map((option, index) => `${index + 1}. ${option}`).join("\n");
   const parts = [card.title, source, card.text, ...(card.state === "open" ? [choices, card.link] : [])];
   return parts.filter(Boolean).join("\n\n");
@@ -58,12 +62,12 @@ export default async function webhook({ hub, options, log, signal }: ChannelCont
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
           options.platform
-            ? payload(String(options.platform), words(card, String(options.platform)))
+            ? payload(String(options.platform), words(card, String(options.platform)), card.language)
             : fill(options.body ?? { text: "{text}" }, words(card)),
         ),
         signal: AbortSignal.timeout(30_000),
       });
-      await accepted(String(options.platform ?? ""), response);
+      await accepted(String(options.platform ?? ""), response, card.language);
       await hub.delivered(card.id, card.version, `sent-${card.id}`);
     } catch (error) {
       log(`card ${card.id} not sent: ${error}`);

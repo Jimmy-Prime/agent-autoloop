@@ -1,6 +1,11 @@
 // What's waiting for delivery, as events: each labelled item, with an id that stays the same until something changes.
 import { github, pages } from "./github.ts";
 import { pendingEvents } from "./input.ts";
+import { tagIn, speak } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 export async function poll(repo: string) {
   const api = github(repo);
@@ -25,6 +30,8 @@ export async function poll(repo: string) {
 }
 
 if (import.meta.main) {
+  // A process of its own, started by the worker: what it says, it says in the language the worker was told.
+  speak(process.env.AGENT_AUTOLOOP_LANGUAGE);
   const events = await poll(process.argv[2]);
-  console.log(`看过了，${events.length} 件待处理\n\`\`\`agent-autoloop\n${JSON.stringify({ events })}\n\`\`\``);
+  console.log(t`看过了，${events.length} 件待处理\n\`\`\`agent-autoloop\n${JSON.stringify({ events })}\n\`\`\``);
 }

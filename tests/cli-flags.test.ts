@@ -20,13 +20,16 @@ let homes = 0;
 type Ran = { code: number; stdout: string; stderr: string; home: string };
 
 /** One command, the way a person types it, in a home nothing has been installed into yet. */
-async function run(args: string[]): Promise<Ran> {
+async function run(args: string[], env: NodeJS.ProcessEnv = {}): Promise<Ran> {
   const home = join(dir, `home-${++homes}`);
   try {
     const { stdout, stderr } = await promisify(execFile)(
       process.execPath,
       ["--disable-warning=ExperimentalWarning", program, ...args],
-      { env: { ...process.env, AGENT_AUTOLOOP_HOME: home }, timeout: 30_000 },
+      {
+        env: { ...process.env, AGENT_AUTOLOOP_LANGUAGE: undefined, ...env, AGENT_AUTOLOOP_HOME: home },
+        timeout: 30_000,
+      },
     );
     return { code: 0, stdout, stderr, home };
   } catch (error) {
@@ -83,6 +86,10 @@ test("init --language writes the language into the new rules, and one that isn't
   assert.equal(bad.code, 1);
   assert.match(bad.stderr, /zh-CN、zh-TW 或 en/);
   assert.equal(existsSync(join(bad.home, "config.json")), false);
+  const told = await run(["init", "--command", "echo {prompt}", "--no-service"], { AGENT_AUTOLOOP_LANGUAGE: "en" });
+  assert.equal(rulesOf(told).language, "en", "the installer tells it this way, which an older release ignores");
+  const both = ["init", "--command", "echo {prompt}", "--language", "zh-TW", "--no-service"];
+  assert.equal(rulesOf(await run(both, { AGENT_AUTOLOOP_LANGUAGE: "en" })).language, "zh-TW", "the flag wins");
 });
 
 test("try --help says how to use it and runs nothing", async () => {

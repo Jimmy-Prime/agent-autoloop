@@ -2,13 +2,14 @@
 // which may not have yet. A copy from anywhere else follows that place. install.sh decides the same way, or an update would
 // fail on a copy it had moved.
 import { spawnSync } from "node:child_process";
+import { t } from "../words/words.ts";
 
 const PUBLISHED = "https://github.com/Jimmy-Prime/agent-autoloop.git";
 const RELEASE = /refs\/tags\/(v(\d+)\.(\d+)\.(\d+))$/;
 
 function git(root: string, ...args: string[]) {
   const done = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
-  if (done.status !== 0) throw new Error(`git ${args[0]} 没成功：${done.stderr?.trim() || done.error?.message}`);
+  if (done.status !== 0) throw new Error(t`git ${args[0]} 没成功：${done.stderr?.trim() || done.error?.message}`);
   return done.stdout.trim();
 }
 

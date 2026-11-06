@@ -3,6 +3,7 @@
 // all of it is escaped, and the only thing the page may load is its own style.
 import { createHash } from "node:crypto";
 import type { cardView } from "./query.ts";
+import { words as speakIn, type Language } from "../words/words.ts";
 
 const STYLE = `:root{color-scheme:light dark;font:16px/1.6 system-ui,sans-serif}
 body{max-width:34rem;margin:0 auto;padding:32px 16px;overflow-wrap:anywhere}
@@ -30,14 +31,18 @@ export const PAGE_HEADERS = {
 const ENTITIES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const escaped = (words: string) => words.replace(/[&<>"']/g, (char) => ENTITIES[char]);
 
-const shell = (title: string, content: string) =>
-  `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">` +
+const HTML_LANG: Record<Language, string> = { "zh-CN": "zh-CN", "zh-TW": "zh-Hant-TW", en: "en" };
+
+const shell = (title: string, content: string, language: Language) =>
+  `<!doctype html><html lang="${HTML_LANG[language]}"><head><meta charset="utf-8">` +
   `<meta name="viewport" content="width=device-width,initial-scale=1"><title>${escaped(title)}</title>` +
   `<style>${STYLE}</style></head><body>${content}</body></html>`;
 
-export const wordsPage = (words: string) => shell(words, `<p>${escaped(words)}</p>`);
+export const wordsPage = (words: string, language: Language = "zh-CN") =>
+  shell(words, `<p>${escaped(words)}</p>`, language);
 
 export function cardPage(card: ReturnType<typeof cardView>) {
+  const t = speakIn(card.language);
   const words = `<h1>${escaped(card.title)}</h1>${card.text ? `<p>${escaped(card.text)}</p>` : ""}`;
   if (card.state === "open") {
     const focused = card.recommend ?? 0;
@@ -50,13 +55,15 @@ export function cardPage(card: ReturnType<typeof cardView>) {
     // A notice can take a line on how it was handled: optional, and kept with the closing.
     const notice = card.kind === "notice";
     const box = notice
-      ? `<input name="text" placeholder="我实际怎么处理的（可不填）" aria-label="处理说明">`
-      : `<input name="text" placeholder="别的想法" aria-label="别的想法" required>`;
-    const other = `<form method="post">${box}<button>${notice ? "记录并结案" : "发送"}</button></form>`;
-    return shell(card.title, `${words}<form method="post">${card.options.map(button).join("")}</form>${other}`);
+      ? `<input name="text" placeholder="${escaped(t`我实际怎么处理的（可不填）`)}" aria-label="${escaped(t`处理说明`)}">`
+      : `<input name="text" placeholder="${escaped(t`别的想法`)}" aria-label="${escaped(t`别的想法`)}" required>`;
+    const send = escaped(notice ? t`记录并结案` : t`发送`);
+    const other = `<form method="post">${box}<button>${send}</button></form>`;
+    const options = `<form method="post">${card.options.map(button).join("")}</form>`;
+    return shell(card.title, `${words}${options}${other}`, card.language);
   }
   const chosen = card.kind === "ask" ? (card.choice !== null ? card.options[card.choice] : card.answer) : null;
-  const outcome = [chosen ? `你选了「${chosen}」` : "", card.result ?? ""].filter(Boolean).join("。");
-  const settled = card.kind === "notice" && card.answer ? `<p>处理说明：${escaped(card.answer)}</p>` : "";
-  return shell(card.title, `${words}${outcome ? `<p>${escaped(outcome)}</p>` : ""}${settled}`);
+  const outcome = [chosen ? t`你选了「${chosen}」` : "", card.result ?? ""].filter(Boolean).join(t`。`);
+  const settled = card.kind === "notice" && card.answer ? `<p>${escaped(t`处理说明：${card.answer}`)}</p>` : "";
+  return shell(card.title, `${words}${outcome ? `<p>${escaped(outcome)}</p>` : ""}${settled}`, card.language);
 }

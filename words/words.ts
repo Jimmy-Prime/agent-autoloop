@@ -36,6 +36,12 @@ export function wordsIn(catalogs: Catalogs) {
   };
 }
 
+/** A t`…` from these catalogs that speaks whatever this process speaks when it's used: what a plugin writes with. */
+export function tagIn(catalogs: Catalogs): Words {
+  const these = wordsIn(catalogs);
+  return (strings, ...values) => these()(strings, ...values);
+}
+
 /** The core's words, which name no product: plugins keep their own catalogs beside them. */
 export const words = wordsIn({ "zh-TW": zhTW, en });
 export const t: Words = (strings, ...values) => words(current)(strings, ...values);

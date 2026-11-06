@@ -4,31 +4,38 @@
 //   "channels": { "telegram": { "key": "…", "token": "123456:ABC…", "chat": "123456789" } } in config.json
 //   "channels": { "telegram": { "name": "Telegram", "answerers": ["123456789"] } } in rules.json: who may answer.
 import type { Card, ChannelContext } from "../../host/channels.ts";
+import { tagIn, wordsIn } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 // https://core.telegram.org/bots/api#sendmessage: 1-4096 characters of text.
 const MOST = 4096;
 const ANSWER_SHOWN = 200;
 
 function outcomeOf(card: Card) {
+  const t = wordsIn({ en, "zh-TW": zhTW })(card.language);
   const chosen = card.choice === null ? card.answer : card.options[card.choice];
-  if (card.state === "decided") return `你选了「${chosen}」，已记录，等待处理。`;
-  if (card.state === "done") return `你选了「${chosen}」。${card.result ? `已执行：${card.result}` : "已执行。"}`;
-  if (card.state === "closed" && card.kind === "ask") return `不用决定了：${card.result ?? ""}`;
+  if (card.state === "decided") return t`你选了「${chosen}」，已记录，等待处理。`;
+  if (card.state === "done") return t`你选了「${chosen}」。${card.result ? t`已执行：${card.result}` : t`已执行。`}`;
+  if (card.state === "closed" && card.kind === "ask") return t`不用决定了：${card.result ?? ""}`;
   return card.state === "closed" && card.result ? card.result : null;
 }
 
 /** One card, as it looks now, in plain text so nothing anyone wrote is read as markup; buttons only while it's open. */
 export function render(card: Card) {
+  const t = wordsIn({ en, "zh-TW": zhTW })(card.language);
   const open = card.state === "open";
   const ask = card.kind === "ask";
   // A button shows one line of its label; the full options are in the message itself.
   const choices =
     open && ask
-      ? card.options.map((option, index) => `${index + 1}. ${option}${index === card.recommend ? "（推荐）" : ""}`)
+      ? card.options.map((option, index) => `${index + 1}. ${option}${index === card.recommend ? t`（推荐）` : ""}`)
       : [];
-  const note = card.kind === "notice" && card.answer ? `处理说明：${card.answer}` : "";
+  const note = card.kind === "notice" && card.answer ? t`处理说明：${card.answer}` : "";
   const text = [card.title, card.text, choices.join("\n"), outcomeOf(card) ?? "", note].filter(Boolean).join("\n\n");
-  if (text.length > MOST) throw new Error(`Telegram 消息超过 ${MOST} 个字，请缩短卡片`);
+  if (text.length > MOST) throw new Error(t`Telegram 消息超过 ${MOST} 个字，请缩短卡片`);
   const buttons = open
     ? card.options.map((option, index) => [
         { text: ask ? `${index + 1}. ${option}` : option, callback_data: `${card.id}:${index}` },
@@ -45,9 +52,9 @@ function messageOf(ref: string) {
 
 export default async function telegram({ hub, options, log, signal }: ChannelContext) {
   const { token, chat } = options;
-  if (typeof token !== "string" || !token) throw new Error("Telegram 通道要在 config.json 写 bot 的 token");
+  if (typeof token !== "string" || !token) throw new Error(t`Telegram 通道要在 config.json 写 bot 的 token`);
   if ((typeof chat !== "string" && typeof chat !== "number") || chat === "") {
-    throw new Error("Telegram 通道要在 config.json 写 chat：你和 bot 私聊的 chat id");
+    throw new Error(t`Telegram 通道要在 config.json 写 chat：你和 bot 私聊的 chat id`);
   }
   const api = String(options.api ?? "https://api.telegram.org");
   const pause = () => new Promise((resolve) => setTimeout(resolve, 10_000));
@@ -63,10 +70,10 @@ export default async function telegram({ hub, options, log, signal }: ChannelCon
         signal: AbortSignal.any([signal, AbortSignal.timeout(seconds * 1000)]),
       });
     } catch (error) {
-      throw new Error(`Telegram ${method} 连不上：${error instanceof Error ? error.name : "error"}`);
+      throw new Error(t`Telegram ${method} 连不上：${error instanceof Error ? error.name : "error"}`);
     }
     const out = await response.json().catch(() => null);
-    if (!out?.ok) throw new Error(`Telegram ${method}：${out?.description ?? `返回 ${response.status}`}`);
+    if (!out?.ok) throw new Error(`Telegram ${method}：${out?.description ?? t`返回 ${response.status}`}`);
     return out.result;
   }
 
@@ -124,10 +131,10 @@ export default async function telegram({ hub, options, log, signal }: ChannelCon
           by,
           ref: `${message.chat.id}:${message.message_id}`,
         });
-        said = answer.changed ? "记下了" : "这张已经定过了";
+        said = answer.changed ? t`记下了` : t`这张已经定过了`;
         log(`card ${card}: answered by ${by}, ${answer.changed ? "counted" : "already settled"}`);
       } catch (error) {
-        said = `没记上：${error instanceof Error ? error.message : error}`.slice(0, ANSWER_SHOWN);
+        said = t`没记上：${error instanceof Error ? error.message : error}`.slice(0, ANSWER_SHOWN);
         log(`card ${card}: click not handled: ${error}`);
       }
     }

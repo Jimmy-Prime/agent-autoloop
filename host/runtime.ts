@@ -12,6 +12,7 @@ import { NotFound } from "../kernel/errors.ts";
 import { initialize, rows, statement, type Fact, type Row, type Table } from "../kernel/evolve.ts";
 import * as query from "../kernel/query.ts";
 import { languageOf } from "../kernel/rules.ts";
+import { speak, t } from "../words/words.ts";
 import { commitLatest, openView } from "../kernel/store.ts";
 import { parseRules as checkRules, RulesError } from "../protocol/rules.ts";
 
@@ -26,8 +27,8 @@ const masterKey = readFileSync(masterKeyFile, "utf8").trim();
 // void every link and token, so that is left to the owner.
 if (!/^[A-Za-z0-9_-]{43}$/.test(masterKey)) {
   throw new Error(
-    `${masterKeyFile} 坏了（应该是 43 个字符），中台不启动。从备份恢复这个文件；没有备份就删掉它，` +
-      "重启会生成新的，但已经发出的卡片链接和正在跑的轮次会失效。",
+    t`${masterKeyFile} 坏了（应该是 43 个字符），中台不启动。从备份恢复这个文件；没有备份就删掉它，` +
+      t`重启会生成新的，但已经发出的卡片链接和正在跑的轮次会失效。`,
   );
 }
 export const environment = {
@@ -111,6 +112,7 @@ export function reloadRules(file = RULES_FILE): { problem?: string } {
     const reportedBroken = (card: Row) => card.key.startsWith("rules:") && card.state === "open";
     if (differs || rows(current, "cards", { state: "open" }).some(reportedBroken)) execute("rules", [next]);
     rules = next;
+    speak(languageOf(rules));
     return {};
   } catch (error) {
     if (error instanceof RulesError) return { problem: error.message };
@@ -119,13 +121,15 @@ export function reloadRules(file = RULES_FILE): { problem?: string } {
 }
 
 function unreadable(file: string, error: NodeJS.ErrnoException) {
-  if (error.code === "ENOENT") return `找不到 ${file}，被删掉或移走了？放回去就会接着用`;
-  if (error.code === "EACCES" || error.code === "EPERM") return `没有权限读 ${file}，改回能读的权限就会接着用`;
-  return `读不到 ${file}：${error.code ?? error.message}`;
+  if (error.code === "ENOENT") return t`找不到 ${file}，被删掉或移走了？放回去就会接着用`;
+  if (error.code === "EACCES" || error.code === "EPERM") return t`没有权限读 ${file}，改回能读的权限就会接着用`;
+  return t`读不到 ${file}：${error.code ?? error.message}`;
 }
 
 const initial = reloadRules();
-if (!rules) throw new Error(initial.problem ?? "缺少规则");
+if (!rules) throw new Error(initial.problem ?? t`缺少规则`);
+// The rules in the log, when the file can't be read: what this process says, it says in their language.
+speak(languageOf(rules));
 
 let toldOf: string | undefined;
 
@@ -173,7 +177,7 @@ export const logAfter = (after = 0, limit = -1) =>
 /** The part of the log that explains one run: its events, cards and receipts, and the rules it ran under. */
 export function why(id: number) {
   const latest = getView();
-  if (!latest.get("runs", id)) throw new NotFound("没有这一轮");
+  if (!latest.get("runs", id)) throw new NotFound(t`没有这一轮`);
   const events = query.eventsOf(latest, id).map((event) => event.id);
   const cards = [...rows(latest, "cards", { run_id: id }), ...rows(latest, "cards", { answer_event: events })];
   const sequences = new Set<number>();

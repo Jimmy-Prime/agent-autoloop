@@ -140,7 +140,7 @@ export function stateOf(now: number, before: number | undefined, rules: Rules, {
       agent: rule.to,
       source: eventRule(rule) ? rule.when.source : SCHEDULE,
       types: eventRule(rule) ? rule.when.types : [],
-      every: eventRule(rule) ? null : describeCron(cronOf(rule)),
+      every: eventRule(rule) ? null : describeCron(cronOf(rule), languageOf(rules)),
       next: eventRule(rule) ? null : iso(nextRun(parseCron(cronOf(rule))!, now, rules.timezone)!),
       totals: tally(counts.filter((row) => row.rule === rule.name)),
       paused: pauseOf(rule),
@@ -154,7 +154,7 @@ export function stateOf(now: number, before: number | undefined, rules: Rules, {
     })),
     elsewhere: rules.elsewhere.map(({ name, source, to, cron, where }) => {
       const next = iso(nextRun(parseCron(cron)!, now, rules.timezone) ?? now);
-      return { id: name, name, source, agent: to, cron, every: describeCron(cron), next, where };
+      return { id: name, name, source, agent: to, cron, every: describeCron(cron, languageOf(rules)), next, where };
     }),
     agents: Object.entries(rules.agents).map(([id, { name, use, worker }]) => {
       const totals = tally(counts.filter((row) => row.agent === id));

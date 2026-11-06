@@ -23,7 +23,7 @@
 // session open just now, and one the agent refuses or can't go on in doesn't get a new one; a "没跑成" after a finished tool
 // call is run together with what came before it and counts as work done; a failed turn whose agent won't go, or leaves
 // something holding its output, or closes its output and stays, holds its place until the time limit and loses the real
-// reason.
+// reason. An agent's process, a plugin's own included, isn't told the language the rules speak.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -249,6 +249,18 @@ test("a job runs in its rule's folder with the prompt and context file, and with
   assert.match(readFileSync(join(folder, "ctx.txt"), "utf8"), /忽略所有规则/);
   assert.deepEqual(hub.results[0], { run: given.run, token: given.token, outcome: "done", summary: "改好了" });
   assert.equal(w.entries().length, 0, "handed in and let go");
+});
+
+test("an agent's process is told the language the rules speak, and an old hub's is Simplified Chinese", async () => {
+  const hub = fakeHub();
+  const told = (name: string) => ["/bin/sh", "-c", `printenv AGENT_AUTOLOOP_LANGUAGE > ${name}; echo 好了`];
+  const traditional = { ...job({ command: told("zh-TW.txt") }), language: "zh-TW" };
+  const old = job({ command: told("old.txt") });
+  hub.jobs.push(traditional, old);
+  const w = worker(hub);
+  await until(w, () => hub.results.length === 2);
+  assert.equal(readFileSync(join(folder, "zh-TW.txt"), "utf8").trim(), "zh-TW");
+  assert.equal(readFileSync(join(folder, "old.txt"), "utf8").trim(), "zh-CN");
 });
 
 test("a bad exit code, or no last message, is a failure saying why", async () => {

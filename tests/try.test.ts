@@ -1,6 +1,7 @@
 // `try` against a real hub, from `init` on. Failure cases: a failure from before this try is reported as this try's, or
 // not said at all so it looks as if nothing is going on; a failure of a run that was already waiting isn't reported; a
-// question still open from before is missed because no new card comes for it, so try waits out its five minutes.
+// question still open from before is missed because no new card comes for it, so try waits out its five minutes; a
+// try whose rule has another name, or whose question is in another language, never finds it.
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -33,7 +34,7 @@ const freePort = () =>
   });
 
 /** A throwaway install running `up`, with this script as its agent and stand-ins for whatever shows a notification. */
-async function install(t: { after: (done: () => unknown) => void }, agent: string) {
+async function install(t: { after: (done: () => unknown) => void }, agent: string, ruleName?: string) {
   const home = mkdtempSync(join(tmpdir(), "agent-autoloop-try-"));
   const standIns = join(home, "stand-ins");
   mkdirSync(standIns);
@@ -59,6 +60,11 @@ async function install(t: { after: (done: () => unknown) => void }, agent: strin
     { env, encoding: "utf8", timeout: 30_000 },
   );
   assert.equal(init.status, 0, init.stderr);
+  if (ruleName) {
+    const rules = JSON.parse(readFileSync(join(home, "rules.json"), "utf8"));
+    rules.rules[0].name = ruleName;
+    writeFileSync(join(home, "rules.json"), JSON.stringify(rules));
+  }
   const up = spawn(process.execPath, [...program, "up"], { env, stdio: "ignore" });
   t.after(async () => {
     up.kill("SIGTERM");
@@ -114,6 +120,14 @@ test("a failure from before isn't this try's: it says when the retry is and wait
   assert.match(second.out, /上一次没跑成（退出码 1：boom），\d\d:\d\d 会自动再试/);
 });
 
+test("a try finds its question whatever its rule is called and whatever language it asks in", async (t) => {
+  const runTry = await install(t, ASKS.replace("试跑：选一个颜色", "Trial: pick a colour"), "Try it");
+  const first = await runTry(20_000);
+  assert.equal(first.stillGoing, false, "it should find the card its rule asked, not wait out its five minutes");
+  assert.equal(first.code, 0, first.err);
+  assert.match(first.out, /#1 Trial: pick a colour/);
+});
+
 // The retry is minutes away, too long to wait for against a real hub.
 test("only a failure since this try started counts", () => {
   const run = (id: number, attempts: number, fields = {}) => ({
@@ -126,10 +140,10 @@ test("only a failure since this try started counts", () => {
     ...fields,
   });
   const before = attemptsOf([run(1, 1)]);
-  assert.equal(newFailure([run(1, 1)], before), undefined, "still waiting for its retry");
-  assert.equal(newFailure([run(1, 2)], before)?.id, 1, "it failed again");
-  assert.equal(newFailure([run(2, 1)], before)?.id, 2, "a new run failed");
-  assert.equal(newFailure([run(3, 0)], before), undefined, "not tried yet");
-  assert.equal(newFailure([run(4, 1, { state: "claimed" })], before), undefined, "going again");
-  assert.equal(newFailure([run(5, 1, { rule: "别的" })], before), undefined, "another rule");
+  assert.equal(newFailure([run(1, 1)], before, "试一下"), undefined, "still waiting for its retry");
+  assert.equal(newFailure([run(1, 2)], before, "试一下")?.id, 1, "it failed again");
+  assert.equal(newFailure([run(2, 1)], before, "试一下")?.id, 2, "a new run failed");
+  assert.equal(newFailure([run(3, 0)], before, "试一下"), undefined, "not tried yet");
+  assert.equal(newFailure([run(4, 1, { state: "claimed" })], before, "试一下"), undefined, "going again");
+  assert.equal(newFailure([run(5, 1, { rule: "别的" })], before, "试一下"), undefined, "another rule");
 });

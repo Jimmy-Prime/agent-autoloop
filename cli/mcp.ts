@@ -3,33 +3,35 @@ import { readConfig } from "../host/config.ts";
 import { eachLine } from "../host/lines.ts";
 import { versionName } from "../host/version.ts";
 import { hubClient, type Hub } from "../protocol/client.ts";
+import { t } from "../words/words.ts";
 
 const positive = { type: "integer", minimum: 1 };
 const string = { type: "string", minLength: 1 };
-const specs = [
-  ["status", "查看现在的事项和卡片", {}, []],
-  ["why", "查看一轮的事件、规则和结果", { run: positive }, ["run"]],
+const specs = () =>
   [
-    "answer",
-    "回答卡片；选项从 0 开始，也可以写自己的答案",
-    { card: positive, choice: { type: "integer", minimum: 0 }, text: string },
-    ["card"],
-  ],
-  ["resolve", "将卡片结案，写明已核实的结果", { card: positive, reason: string }, ["card", "reason"]],
-  ["stop", "停止一轮", { run: positive }, ["run"]],
-  [
-    "emit",
-    "用本机来源发送事件；相同编号只记一次",
-    { id: string, type: string, subject: string, summary: string, detail: string, link: string },
-    ["id", "type"],
-  ],
-  ["tell", "用本机来源发送通知；相同编号只发一次", { key: string, text: string }, ["key", "text"]],
-] as const;
+    ["status", t`查看现在的事项和卡片`, {}, []],
+    ["why", t`查看一轮的事件、规则和结果`, { run: positive }, ["run"]],
+    [
+      "answer",
+      t`回答卡片；选项从 0 开始，也可以写自己的答案`,
+      { card: positive, choice: { type: "integer", minimum: 0 }, text: string },
+      ["card"],
+    ],
+    ["resolve", t`将卡片结案，写明已核实的结果`, { card: positive, reason: string }, ["card", "reason"]],
+    ["stop", t`停止一轮`, { run: positive }, ["run"]],
+    [
+      "emit",
+      t`用本机来源发送事件；相同编号只记一次`,
+      { id: string, type: string, subject: string, summary: string, detail: string, link: string },
+      ["id", "type"],
+    ],
+    ["tell", t`用本机来源发送通知；相同编号只发一次`, { key: string, text: string }, ["key", "text"]],
+  ] as const;
 
 const usesSourceKey = (name: string) => ["emit", "tell"].includes(name);
 
 function toolsFor(config: ReturnType<typeof readConfig>) {
-  return specs
+  return specs()
     .filter(([name]) => (usesSourceKey(name) ? config.source : config.owner))
     .map(([name, description, properties, required]) => ({
       name,
@@ -84,7 +86,7 @@ export async function mcp() {
   async function answerCall(id: unknown, params: any) {
     const tool = tools.find((tool) => tool.name === params?.name);
     const args = params?.arguments ?? {};
-    if (!tool || !validArguments(tool, args)) return refuse(id, -32602, "工具名或参数不正确");
+    if (!tool || !validArguments(tool, args)) return refuse(id, -32602, t`工具名或参数不正确`);
     const hub = hubClient(config.url, usesSourceKey(tool.name) ? config.source!.key : config.owner!);
     try {
       const result = await callTool(hub, tool.name, args);
@@ -99,10 +101,10 @@ export async function mcp() {
     try {
       request = JSON.parse(line);
     } catch {
-      return refuse(null, -32700, "不是 JSON");
+      return refuse(null, -32700, t`不是 JSON`);
     }
     if (!request || request.jsonrpc !== "2.0" || typeof request.method !== "string") {
-      return refuse(request?.id ?? null, -32600, "请求格式不正确");
+      return refuse(request?.id ?? null, -32600, t`请求格式不正确`);
     }
     const { id, method, params } = request;
     if (id === undefined) return;
@@ -113,6 +115,6 @@ export async function mcp() {
     else if (method === "tools/list") reply(id, { result: { tools } });
     // Each answers by itself, however long it takes: a client's ping has to get through meanwhile.
     else if (method === "tools/call") void answerCall(id, params);
-    else refuse(id, -32601, "没有这个方法");
+    else refuse(id, -32601, t`没有这个方法`);
   });
 }

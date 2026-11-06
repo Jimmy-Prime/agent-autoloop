@@ -10,6 +10,7 @@ import { runningUp } from "./service.ts";
 import { commitOf } from "./version.ts";
 import { hubClient } from "../protocol/client.ts";
 import { createWorker } from "../worker/worker.ts";
+import { t } from "../words/words.ts";
 
 const log = (who: string) => (line: string) => console.log(`${new Date().toISOString()} [${who}] ${line}`);
 
@@ -17,7 +18,7 @@ const log = (who: string) => (line: string) => console.log(`${new Date().toISOSt
 function lock() {
   const running = runningUp();
   // Its own number is what was left behind: pid 1 every time in a container, and a matter of luck after a restart.
-  if (running !== null && running !== process.pid) throw new Error(`已经在跑了（进程 ${running}）`);
+  if (running !== null && running !== process.pid) throw new Error(t`已经在跑了（进程 ${running}）`);
   const file = path.join(HOME, "up.pid");
   writeFileSync(file, String(process.pid));
   return () => {

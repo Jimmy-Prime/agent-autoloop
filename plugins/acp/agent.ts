@@ -1,6 +1,11 @@
 import { join } from "node:path";
 import { stablePath } from "../../host/node-path.ts";
 import { tail, type Adapter, type Reading } from "../../worker/agents.ts";
+import { tagIn } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 export default {
   command: (turn) => [
@@ -24,7 +29,7 @@ export default {
       // What the agent itself said, then why it failed. The bridge says that last, unless the agent went on talking.
       const said = tail(stderr);
       const error = said.endsWith(reading.error ?? "") ? said : tail(`${said}\n${reading.error}`);
-      return { session: reading.session, started: reading.started, error: error || "ACP 没有完成这一轮" };
+      return { session: reading.session, started: reading.started, error: error || t`ACP 没有完成这一轮` };
     }
     return reading;
   },

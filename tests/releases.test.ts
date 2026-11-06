@@ -5,7 +5,7 @@
 // up to date or as there being none, which would install main, or an update with nothing new restarts the service; installing says
 // something about detached HEADs; a copy that fetched only its own tag can't say which release it is. An install of
 // upstream's release, run over with this fork's installer, fails or stays on upstream. A new install doesn't speak the
-// language of the machine it's on. No network: git's own insteadOf points the public address at a repository made here.
+// language of the machine it's on, or tells it in a way the release it installs, older than the installer, refuses. No network: git's own insteadOf points the public address at a repository made here.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -46,7 +46,10 @@ mkdirSync(join(original, "bin"), { recursive: true });
 git(original, "init", "-q");
 function publish(words: string, tag?: string) {
   const program = join(original, "bin", "agent-autoloop.ts");
-  writeFileSync(program, `#!/bin/sh\necho "${words} $*" >> "$RAN"\n`);
+  writeFileSync(
+    program,
+    `#!/bin/sh\necho "${words} $* \${AGENT_AUTOLOOP_LANGUAGE:+language=$AGENT_AUTOLOOP_LANGUAGE}" >> "$RAN"\n`,
+  );
   chmodSync(program, 0o755);
   git(original, "add", "-A");
   git(original, "commit", "-q", "-m", words);
@@ -133,6 +136,8 @@ function runInstaller(person: string, env: NodeJS.ProcessEnv = {}) {
       PATH: `${bin}:${tools}`,
       RAN: ran,
       AGENT_AUTOLOOP_HOME: join(person, "hub"),
+      // The words checked here are the Simplified Chinese ones.
+      LANG: "zh_CN.UTF-8",
       ...env,
     },
     encoding: "utf8",
@@ -233,6 +238,7 @@ test("a new install speaks the language of the machine it's on", () => {
     const person = join(dir, `speaks-${LANG || "nothing"}`);
     mkdirSync(person);
     const it = install(person, { LANG });
-    assert.match(it.said(), new RegExp(`init --no-service --language ${language}\n`), LANG);
+    assert.match(it.said(), new RegExp(`init --no-service language=${language}\n`), LANG);
+    assert.doesNotMatch(it.said(), /--language/, "a release from before --language would stop at it");
   }
 });

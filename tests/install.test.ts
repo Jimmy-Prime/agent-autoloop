@@ -6,6 +6,7 @@
 // that Homebrew's node@24 isn't on PATH; running it again redoes the setup, or installs a service after --no-service.
 // A normal umask or a pre-existing directory must not expose the database, event text or worker output to other users.
 // A computer that only takes work can't join, because the installer has set a hub up on it first.
+// The installer speaks Simplified Chinese on a machine that speaks something else, or translates the commands it prints.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
@@ -82,8 +83,14 @@ case " $* " in *" clone "*) for target; do :; done; cp -R "${copy}" "$target"; m
   const hub = join(person, ".agent-autoloop");
   const program = join(hub, "app", "bin", "agent-autoloop.ts");
   const local = join(person, ".local", "bin");
-  const run = (path: string[], args = ["--no-service", "--command", "true", "--port", "3999"], shell = "/bin/sh") => {
-    const env: NodeJS.ProcessEnv = { HOME: person, PATH: [...path, tools].join(":") };
+  const run = (
+    path: string[],
+    args = ["--no-service", "--command", "true", "--port", "3999"],
+    shell = "/bin/sh",
+    more: NodeJS.ProcessEnv = {},
+  ) => {
+    // A new install speaks the machine's language: the words checked here are the Simplified Chinese ones.
+    const env: NodeJS.ProcessEnv = { HOME: person, PATH: [...path, tools].join(":"), LANG: "zh_CN.UTF-8", ...more };
     return spawnSync(shell, [script, ...args], {
       env,
       encoding: "utf8",
@@ -222,6 +229,20 @@ for (const [node, words] of [
     assert.equal(readFileSync(join(shell, ".zshrc"), "utf8"), 'export PATH="/homebrew/opt/node@24/bin:$PATH"\n');
   });
 }
+
+test("the installer speaks the language of the machine it's on, and its commands stay as they are", () => {
+  for (const [LANG, words] of [
+    ["en_US.UTF-8", /Node\.js 24 or newer is needed, and this computer doesn't have it/],
+    ["zh_TW.UTF-8", /需要 Node\.js 24 或更新，這台電腦上沒找到/],
+  ] as const) {
+    const it = computer({ node: "none" });
+    const done = it.run([], undefined, "/bin/sh", { LANG });
+    assert.equal(done.status, 1);
+    assert.match(done.stdout, words, LANG);
+    assert.match(done.stdout, /^ +brew install node@24$/m);
+    assert.match(done.stdout, /^ +nvm install 24$/m);
+  }
+});
 
 test("running it again updates and doesn't set anything up over what's there", () => {
   const it = computer();

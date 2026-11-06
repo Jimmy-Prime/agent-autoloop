@@ -2,6 +2,11 @@
 // rather than trusting its own last response, and a failure is left for the hub's retry to pick up where it stands.
 import { settings, type Live, type Settings } from "./project.ts";
 import type { Finding } from "./review.ts";
+import { tagIn } from "../../words/words.ts";
+import en from "./en.ts";
+import zhTW from "./zh-TW.ts";
+
+const t = tagIn({ en, "zh-TW": zhTW });
 
 export type DeliveryIO = {
   api(path: string, body?: any, method?: string): Promise<any>;
@@ -15,7 +20,7 @@ export type DeliveryIO = {
 };
 export type Delivered = { summary: string; merged?: string; reviewOnly?: boolean; findings?: Finding[]; head?: string };
 
-const FINDINGS = "审查发现问题，修复后推新提交才会重审";
+const findingsMessage = () => t`审查发现问题，修复后推新提交才会重审`;
 const labels = (pr: any) => new Set<string>((pr.labels ?? []).map((label: any) => label.name));
 const newestFirst = (a: any, b: any) => b.id - a.id;
 
@@ -36,7 +41,7 @@ export async function disableAuto(number: number, io: DeliveryIO) {
     }
     if (attempt < 2) await io.wait();
   }
-  throw new Error("无法确认自动合并已关闭");
+  throw new Error(t`无法确认自动合并已关闭`);
 }
 
 async function newestCheck(head: string, config: Settings, io: DeliveryIO) {
@@ -81,7 +86,7 @@ export async function waitLive(merged: string, config: Settings, io: DeliveryIO)
     }
     const newest = covering[0];
     if (newest?.status === "completed" && newest.conclusion !== "success") {
-      throw new Error("已经合并，发布没有通过；修复发布后重交，不要重复提交代码");
+      throw new Error(t`已经合并，发布没有通过；修复发布后重交，不要重复提交代码`);
     }
     await io.wait();
   }
@@ -107,7 +112,7 @@ async function synced(number: number, head: string, base: string, io: DeliveryIO
   for (;;) {
     const pr = await io.api(`pulls/${number}`);
     if (pr.head.sha !== head && (await io.contains(base, pr.head.sha))) return pr;
-    if (Date.now() > until) throw new Error("已请求同步 main，15 分钟内没有看到同步后的提交，稍后重试");
+    if (Date.now() > until) throw new Error(t`已请求同步 main，15 分钟内没有看到同步后的提交，稍后重试`);
     await io.wait();
   }
 }
@@ -119,19 +124,20 @@ export async function deliver(
   testLocalHealth = false,
 ): Promise<Delivered> {
   const reviewOnly = async (pr: any): Promise<Delivered> => {
-    const summary = "审查通过，未合并或发布";
+    const summary = t`审查通过，未合并或发布`;
     await status(io, pr.head.sha, "delivery", "success", summary);
     await clearLabels(number, pr, io);
     return { summary, reviewOnly: true };
   };
   let pr = await io.api(`pulls/${number}`);
-  if (!labels(pr).has("deliver") || (!pr.merged_at && pr.state !== "open")) return { summary: "没有待交付的标记" };
-  if (pr.head.repo?.full_name !== repo || pr.base.ref !== "main") throw new Error("只处理本仓库分支到 main 的合并请求");
+  if (!labels(pr).has("deliver") || (!pr.merged_at && pr.state !== "open")) return { summary: t`没有待交付的标记` };
+  if (pr.head.repo?.full_name !== repo || pr.base.ref !== "main")
+    throw new Error(t`只处理本仓库分支到 main 的合并请求`);
   if (pr.auto_merge) await disableAuto(number, io);
   const settingsAt = async (commit: string) => {
     const file = await io.api(`contents/ops/delivery.json?ref=${commit}`);
     const read = settings(JSON.parse(Buffer.from(file.content, "base64").toString("utf8")), testLocalHealth);
-    if (read.repo !== repo) throw new Error("main 的 repo 设置与交付仓库不一致");
+    if (read.repo !== repo) throw new Error(t`main 的 repo 设置与交付仓库不一致`);
     return read;
   };
   let config = await settingsAt((await io.api("git/ref/heads/main")).object.sha);
@@ -141,9 +147,9 @@ export async function deliver(
     // The review status keeps the record, since a failed round writes its error over `delivery`.
     const { statuses } = await io.api(`commits/${head}/status?per_page=100`);
     if (statuses.some((item: any) => item.context === config.review.status && item.state === "failure"))
-      return { summary: "这个提交审查发现过问题，修复后推新提交才会重审" };
+      return { summary: t`这个提交审查发现过问题，修复后推新提交才会重审` };
   }
-  await status(io, head, "delivery", "pending", "正在审查、检查和核实发布");
+  await status(io, head, "delivery", "pending", t`正在审查、检查和核实发布`);
   // Sync inside the run: a thrown sync waits out the hub's growing retry backoff while main keeps moving.
   for (let round = 1; !pr.merged_at; round++) {
     let base = (await io.api("git/ref/heads/main")).object.sha;
@@ -151,13 +157,13 @@ export async function deliver(
       await io.api(`pulls/${number}/update-branch`, { expected_head_sha: head }, "PUT");
       pr = await synced(number, head, base, io);
       head = pr.head.sha;
-      await status(io, head, "delivery", "pending", "已同步 main，正在审查、检查和核实发布");
+      await status(io, head, "delivery", "pending", t`已同步 main，正在审查、检查和核实发布`);
       // GitHub syncs with main as it is by then, which may be newer than what was read above: against the older one, those
       // commits would be reviewed as the branch's own.
       base = (await io.api("git/ref/heads/main")).object.sha;
       if (!(await io.contains(base, head))) {
         if (round < 3) continue;
-        throw new Error("main 已前进，稍后重新同步和检查");
+        throw new Error(t`main 已前进，稍后重新同步和检查`);
       }
     }
     // The settings of the main this round is against: a newer one may add the health check its release has to pass.
@@ -168,12 +174,12 @@ export async function deliver(
       pr = current;
       break;
     }
-    if (current.head.sha !== head) throw new Error("审查期间提交变了，等待重新交付");
+    if (current.head.sha !== head) throw new Error(t`审查期间提交变了，等待重新交付`);
     if (findings.length) {
-      await status(io, head, "delivery", "failure", FINDINGS);
+      await status(io, head, "delivery", "failure", findingsMessage());
       // Last: once this stands nothing reviews the commit again, so a failed write must not keep the findings from going out.
-      await status(io, head, config.review.status, "failure", FINDINGS);
-      return { summary: "审查发现问题，尚未合并", findings, head };
+      await status(io, head, config.review.status, "failure", findingsMessage());
+      return { summary: t`审查发现问题，尚未合并`, findings, head };
     }
     if (labels(current).has("deliver-review")) {
       return reviewOnly(current);
@@ -186,36 +192,36 @@ export async function deliver(
     }
     for (;;) {
       const state = await fullCheck(head, config, io, after);
-      if (state === "failed") throw new Error("完整检查没有通过");
+      if (state === "failed") throw new Error(t`完整检查没有通过`);
       if (state === "passed") break;
-      if ((await io.api(`pulls/${number}`)).head.sha !== head) throw new Error("检查期间提交变了");
+      if ((await io.api(`pulls/${number}`)).head.sha !== head) throw new Error(t`检查期间提交变了`);
       await io.wait();
     }
     pr = await io.api(`pulls/${number}`);
-    if (pr.head.sha !== head) throw new Error("要合并的提交没有经过本轮审查");
-    if (pr.base.ref !== "main") throw new Error("等待检查期间目标分支改了，只合并到 main");
+    if (pr.head.sha !== head) throw new Error(t`要合并的提交没有经过本轮审查`);
+    if (pr.base.ref !== "main") throw new Error(t`等待检查期间目标分支改了，只合并到 main`);
     if (!pr.merged_at) {
       if (!labels(pr).has("deliver")) {
-        await status(io, head, "delivery", "success", "交付标记已撤回，未合并或发布");
-        return { summary: "交付标记已撤回" };
+        await status(io, head, "delivery", "success", t`交付标记已撤回，未合并或发布`);
+        return { summary: t`交付标记已撤回` };
       }
       if (labels(pr).has("deliver-review")) return reviewOnly(pr);
       if ((await io.api("git/ref/heads/main")).object.sha !== base) {
         if (round < 3) continue;
-        throw new Error("main 已前进，稍后重新同步和检查");
+        throw new Error(t`main 已前进，稍后重新同步和检查`);
       }
-      await status(io, head, config.review.status, "success", "此提交审查通过，完整检查通过");
+      await status(io, head, config.review.status, "success", t`此提交审查通过，完整检查通过`);
       try {
         await io.merge(pr, config);
       } catch (error) {
         if (!(await io.api(`pulls/${number}`)).merged_at) throw error;
       }
       pr = await io.api(`pulls/${number}`);
-      if (!pr.merged_at) throw new Error("尚未确认合并，稍后继续核实");
+      if (!pr.merged_at) throw new Error(t`尚未确认合并，稍后继续核实`);
     }
   }
   await waitLive(pr.merge_commit_sha, config, io);
-  const summary = config.health ? "已合并、发布成功，健康版本已核实" : "已合并；项目没有线上服务";
+  const summary = config.health ? t`已合并、发布成功，健康版本已核实` : t`已合并；项目没有线上服务`;
   await status(io, pr.head.sha, "delivery", "success", summary);
   await clearLabels(number, pr, io);
   return { summary, merged: pr.merge_commit_sha };

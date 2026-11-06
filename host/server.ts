@@ -7,6 +7,7 @@ import { loadPlugin } from "./plugins.ts";
 import * as hub from "./runtime.ts";
 import { AuthError, NotFound } from "../kernel/errors.ts";
 import { createHandler } from "../kernel/http.ts";
+import { t } from "../words/words.ts";
 
 /** Past this setTimeout fires at once. */
 const LONGEST_TIMER = 2147483647;
@@ -56,14 +57,14 @@ function logStream(after: number, signal: AbortSignal, key: string) {
 
 async function adaptWebhook(source: string, headers: Headers, body: string) {
   const adapter = hub.rules.sources[source]?.adapter;
-  if (!adapter || !/^[a-z][a-z0-9-]*$/.test(adapter)) throw new NotFound("这个来源不收 Webhook");
+  if (!adapter || !/^[a-z][a-z0-9-]*$/.test(adapter)) throw new NotFound(t`这个来源不收 Webhook`);
   const translate = await loadPlugin(adapter, "source");
   const secret = process.env[`AGENT_AUTOLOOP_SECRET_${source.toUpperCase().replaceAll("-", "_")}`] ?? "";
   try {
     const events = translate({ headers: Object.fromEntries(headers), body, secret });
     return Array.isArray(events) ? events : [];
   } catch {
-    throw new AuthError("验签没过");
+    throw new AuthError(t`验签没过`);
   }
 }
 

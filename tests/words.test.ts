@@ -1,13 +1,18 @@
 // Words people read, in the language the rules ask for. Failure cases: a translation drops a value or puts one in the
 // wrong place; a value that looks like a placeholder is filled in again; a string with no translation comes out empty or
 // with its placeholders showing, instead of as it was written; a language that isn't one is taken, or changes what this
-// process speaks; one plugin's words are looked up in another's.
+// process speaks; one plugin's words are looked up in another's; a string people read has no English or an out-of-date
+// Traditional Chinese, or a translation loses or repeats one of its values.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { isLanguage, keyOf, speak, spoken, t, wordsIn } from "../words/words.ts";
+import { isLanguage, keyOf, speak, spoken, t, tagIn, wordsIn } from "../words/words.ts";
 
 const catalog = wordsIn({
-  en: { "连续 {0} 次没跑成，最后一次是 {1}": "{1} was the last of {0} failed runs in a row", 已处理: "Handled" },
+  en: {
+    "连续 {0} 次没跑成，最后一次是 {1}": "{1} was the last of {0} failed runs in a row",
+    已处理: "Handled",
+    只有这个插件说的话: "What only this plugin says",
+  },
   "zh-TW": { 已处理: "已處理" },
 });
 
@@ -46,8 +51,25 @@ test("only the three languages are languages, and only they change what this pro
     speak("fr");
     assert.equal(spoken(), "en");
     assert.equal(catalog()`已处理`, "Handled", "a plugin's words follow what this process speaks");
-    assert.equal(t`已处理`, "已处理", "the core's words aren't a plugin's");
+    const plugin = tagIn({ "zh-TW": { 已处理: "已處理" } });
+    speak("zh-TW");
+    assert.equal(plugin`已处理`, "已處理", "and keep following it after they're made");
+    assert.equal(t`只有这个插件说的话`, "只有这个插件说的话", "the core's words aren't a plugin's");
   } finally {
     speak(before);
+  }
+});
+
+test("every string people read has its English and Traditional Chinese, each with all the original's values", async () => {
+  const { catalogs, problems } = await import("../scripts/words.ts");
+  const { said } = await problems();
+  assert.deepEqual(said, [], "run node scripts/words.ts, and add the English lines it lists");
+  const places = (text: string) => [...text.matchAll(/\{(\d+)\}/g)].map((found) => found[1]).sort();
+  for (const folder of catalogs().keys()) {
+    for (const language of ["en", "zh-TW"]) {
+      const catalog: Record<string, string> = (await import(`../${folder}/${language}.ts`)).default;
+      for (const [key, translation] of Object.entries(catalog))
+        assert.deepEqual(places(translation), places(key), `${folder}/${language}.ts: ${key}`);
+    }
   }
 });

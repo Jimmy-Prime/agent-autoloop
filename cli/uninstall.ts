@@ -5,6 +5,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { HOME } from "../host/home.ts";
 import { removeService, stopUp } from "../host/service.ts";
+import { t } from "../words/words.ts";
 
 const ROOT = path.join(import.meta.dirname, "..");
 
@@ -17,7 +18,7 @@ function removeLink(link: string, target: string) {
   }
   // Not rmSync: Node 25.1 refuses it for a link that leads to a folder.
   unlinkSync(link);
-  console.log(`删掉了 ${link}`);
+  console.log(t`删掉了 ${link}`);
 }
 
 function removeLinks() {
@@ -32,9 +33,9 @@ function removeLinks() {
 /** Confirmation is about removing the program; data is never part of this command. */
 export async function uninstall(yes: boolean, ask: ((question: string) => Promise<string>) | null) {
   if (!yes) {
-    if (!ask) throw new Error("运行 agent-autoloop uninstall --yes 卸载程序，规则、密钥和记录会保留。");
-    if (!/^y(es)?$/i.test((await ask("卸载程序并保留数据？[y/N] ")).trim())) {
-      console.log("没有卸载。");
+    if (!ask) throw new Error(t`运行 agent-autoloop uninstall --yes 卸载程序，规则、密钥和记录会保留。`);
+    if (!/^y(es)?$/i.test((await ask(t`卸载程序并保留数据？[y/N] `)).trim())) {
+      console.log(t`没有卸载。`);
       return;
     }
   }
@@ -45,5 +46,5 @@ export async function uninstall(yes: boolean, ask: ((question: string) => Promis
   if (existsSync(installedApp) && realpathSync(installedApp) === realpathSync(ROOT)) {
     rmSync(installedApp, { recursive: true });
   }
-  console.log(existsSync(HOME) ? `卸载好了。规则、密钥和记录还留在 ${HOME}。` : "卸载好了。");
+  console.log(existsSync(HOME) ? t`卸载好了。规则、密钥和记录还留在 ${HOME}。` : t`卸载好了。`);
 }
