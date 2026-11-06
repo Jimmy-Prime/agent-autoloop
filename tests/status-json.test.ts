@@ -1,5 +1,6 @@
 // Failure modes: --json changes the state instead of printing it; the human output stops being the plain one; an
-// unknown flag is ignored and the command quietly does something else.
+// unknown flag is ignored and the command quietly does something else; the state doesn't say what language the rules
+// speak, so a client can't speak it too.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { once } from "node:events";
@@ -51,6 +52,7 @@ test("status --json prints the same state the hub serves, and the plain output s
   const state = JSON.parse(await cli("status", "--json"));
   assert.deepEqual(Object.keys(state).sort(), Object.keys(hub.stateOf()).sort());
   assert.equal(state.timezone, hub.stateOf().timezone);
+  assert.equal(state.language, "zh-CN", "rules that don't say speak Simplified Chinese");
   assert.ok(Array.isArray(state.runs));
   assert.ok(Array.isArray(state.cards));
   const human = await cli("status");

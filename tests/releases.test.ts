@@ -4,7 +4,8 @@
 // asked to follow, or run over with the installer and left unable to update; a failed look at the releases counts as being
 // up to date or as there being none, which would install main, or an update with nothing new restarts the service; installing says
 // something about detached HEADs; a copy that fetched only its own tag can't say which release it is. An install of
-// upstream's release, run over with this fork's installer, fails or stays on upstream. No network: git's own insteadOf points the public address at a repository made here.
+// upstream's release, run over with this fork's installer, fails or stays on upstream. A new install doesn't speak the
+// language of the machine it's on. No network: git's own insteadOf points the public address at a repository made here.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -219,4 +220,19 @@ test("the installer run over an install of upstream's release moves it to this f
   assert.match(newest ?? "", /^v1\.\d+\.0$/, "this fork's release, not upstream's v9.0.0");
   assert.match(it.out, /fork/);
   assert.deepEqual(updateCode(app), { changed: false, to: newest });
+});
+
+test("a new install speaks the language of the machine it's on", () => {
+  for (const [LANG, language] of [
+    ["zh_TW.UTF-8", "zh-TW"],
+    ["zh_HK.UTF-8", "zh-TW"],
+    ["zh_CN.UTF-8", "zh-CN"],
+    ["en_US.UTF-8", "en"],
+    ["", "en"],
+  ]) {
+    const person = join(dir, `speaks-${LANG || "nothing"}`);
+    mkdirSync(person);
+    const it = install(person, { LANG });
+    assert.match(it.said(), new RegExp(`init --no-service --language ${language}\n`), LANG);
+  }
 });

@@ -1,6 +1,7 @@
 // Failure modes: a vendor receives the wrong JSON shape; an HTTP 200 API error is acknowledged as delivered; Discord
 // content exceeds its documented limit; externally supplied text triggers mentions; an unknown template is silently used;
 // WeCom renders what an Agent wrote as markup, so its text can pass off a link of its own as the card's.
+// A WeCom notice whose button is in another language loses the way to close it.
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { once } from "node:events";
@@ -141,4 +142,37 @@ test("wecom: what the card says shows as words, so only the card's own link is a
   );
   assert.doesNotMatch(content, /<font|<@/, "the text's tags would be drawn or mention someone");
   assert.match(content, /\[点击处理\]\(https:\/\/example\.com\/c\/a\)/);
+});
+
+test("wecom: a notice's button in another language still closes it from the link", async () => {
+  const received: any[] = [];
+  const server = createServer((req, res) => {
+    let body = "";
+    req.on("data", (b) => (body += b));
+    req.on("end", () => {
+      received.push(JSON.parse(body));
+      res.end(JSON.stringify({ errcode: 0 }));
+    });
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const stop = new AbortController();
+  let given = false;
+  const hub: any = {
+    nextCard: async () => {
+      if (!given) return ((given = true), { card: { ...card, options: ["Handled"], language: "en" } });
+      stop.abort();
+      return { card: null };
+    },
+    delivered: async () => {},
+    failed: async () => {},
+  };
+  try {
+    const url = `http://127.0.0.1:${(server.address() as any).port}`;
+    await webhook({ hub, options: { platform: "wecom", url }, log: () => {}, signal: stop.signal });
+  } finally {
+    server.close();
+  }
+  assert.match(received[0].markdown.content, /\]\(https:\/\/example\.com\/c\/a\)/);
+  assert.doesNotMatch(received[0].markdown.content, /1\. Handled/);
 });

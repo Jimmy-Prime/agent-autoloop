@@ -5,7 +5,7 @@ import { describeCron, dayStart, nextRun, parseCron } from "../kernel/cron.ts";
 import { SEEN_EVERY } from "../kernel/due.ts";
 import { iso, type Row } from "../kernel/evolve.ts";
 import type { cardView } from "../kernel/query.ts";
-import { cronOf, eventRule, SCHEDULE, type Rules } from "../kernel/rules.ts";
+import { cronOf, eventRule, languageOf, SCHEDULE, type Rules } from "../kernel/rules.ts";
 
 /** The columns of the read-only SQL views over the projections, which the queries here read. */
 const VIEWS = {
@@ -124,6 +124,7 @@ export function stateOf(now: number, before: number | undefined, rules: Rules, {
   return {
     now: iso(now),
     timezone: rules.timezone,
+    language: languageOf(rules),
     spending: spendingOf(all, now, rules.timezone),
     totals: { ...tally(counts), attention: openCards.length },
     cards: openCards.map((card) => view(card)),

@@ -70,6 +70,8 @@ for (const [files, expected] of [
   ],
   [["kernel/decide.ts"], "kernel"],
   [["protocol/rules.ts"], "kernel"],
+  [["words/words.ts"], "kernel"],
+  [["words/en.ts", "words/zh-TW.ts"], "normal"],
   [["README.md", "worker/worker.ts", "kernel/decide.ts"], "kernel"],
   [["sim/random.ts", "sim/world.ts", "sim/invariants.ts"], "kernel"],
   [["sim/mutate.ts", "sim/mutation.test.ts", "sim/crash.ts", "sim/crash.test.ts"], "normal"],

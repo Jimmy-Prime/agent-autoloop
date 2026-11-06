@@ -14,7 +14,7 @@ const root = join(import.meta.dirname, "..");
 const dir = mkdtempSync(join(tmpdir(), "agent-autoloop-format-"));
 after(() => rmSync(dir, { recursive: true, force: true }));
 const code = join(dir, "code");
-for (const name of ["kernel", "host", "protocol", "package.json"])
+for (const name of ["kernel", "host", "protocol", "words", "package.json"])
   cpSync(join(root, name), join(code, name), { recursive: true });
 const home = join(dir, "home");
 

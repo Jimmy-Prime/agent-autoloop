@@ -11,6 +11,7 @@ import { decide } from "../kernel/decide.ts";
 import { NotFound } from "../kernel/errors.ts";
 import { initialize, rows, statement, type Fact, type Row, type Table } from "../kernel/evolve.ts";
 import * as query from "../kernel/query.ts";
+import { languageOf } from "../kernel/rules.ts";
 import { commitLatest, openView } from "../kernel/store.ts";
 import { parseRules as checkRules, RulesError } from "../protocol/rules.ts";
 
@@ -145,7 +146,7 @@ export function cardByToken(token: string) {
 }
 
 export const view = (card: Row, ref: string | null = null, links = false) =>
-  query.cardView(card, environment, ref, links);
+  query.cardView(card, environment, ref, links, languageOf(query.configuration(getView())));
 export const unrouted = (limit = 20) => query.unrouted(getView(), limit);
 export const stateOf = (now = Date.now(), before?: number) =>
   state(now, before, query.configuration(getView()), { all, view, unrouted });

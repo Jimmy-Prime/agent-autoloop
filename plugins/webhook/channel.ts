@@ -26,8 +26,8 @@ function words(card: Card, platform = "") {
     platform === "wecom" &&
     card.kind === "notice" &&
     card.state === "open" &&
+    // An open notice's one button is that it's been handled, in whatever language the hub speaks.
     card.options.length === 1 &&
-    card.options[0] === "已处理" &&
     card.link
   )
     return [card.title, source, card.text, `[点击处理](${card.link})`].filter(Boolean).join("\n\n");

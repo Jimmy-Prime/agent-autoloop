@@ -1,4 +1,5 @@
 import type { Rule } from "../kernel/rules.ts";
+import type { Language } from "../words/words.ts";
 export type Job = {
   run: number;
   token: string;
@@ -16,6 +17,8 @@ export type Job = {
   };
   session: string | null;
   askFirst: string[];
+  /** What the rules speak. Hubs from before there was one don't say: Simplified Chinese. */
+  language?: Language;
   context: {
     events: {
       id: string;

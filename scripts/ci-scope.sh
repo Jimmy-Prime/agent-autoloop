@@ -27,7 +27,7 @@ while IFS= read -r file; do
     README.md | README.en.md | INSTALL.md | SECURITY.md | CONTRIBUTING.md | AGENTS.md | LICENSE) kind=docs ;;
     docs/* | .github/ISSUE_TEMPLATE/* | .github/pull_request_template.md) kind=docs ;;
     tests/simulation.test.ts | sim/enumerate.ts) kind=full ;;
-    kernel/* | protocol/* | sim/random.ts | sim/world.ts | sim/invariants.ts) kind=kernel ;;
+    kernel/* | protocol/* | words/words.ts | sim/random.ts | sim/world.ts | sim/invariants.ts) kind=kernel ;;
     *) kind=normal ;;
   esac
   case "$kind" in

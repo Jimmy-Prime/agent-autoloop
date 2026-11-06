@@ -38,7 +38,18 @@ function install() {
   const person = join(dir, `person-${++people}`);
   const hub = join(person, ".agent-autoloop");
   const app = join(hub, "app");
-  for (const part of ["bin", "cli", "host", "kernel", "plugins", "protocol", "skills", "worker", "package.json"]) {
+  for (const part of [
+    "bin",
+    "cli",
+    "host",
+    "kernel",
+    "plugins",
+    "protocol",
+    "skills",
+    "words",
+    "worker",
+    "package.json",
+  ]) {
     cpSync(join(repo, part), join(app, part), { recursive: true });
   }
   const standIns = join(person, "stand-ins");

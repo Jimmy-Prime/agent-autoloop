@@ -13,6 +13,8 @@
 // A deadline nothing will move on again has the shell's one timer firing at once for good: a schedule whose rule is gone or
 // no longer scheduled, a resend whose time has passed with the channel gone. A resend must also come due at its time, or
 // a channel waiting for the next card isn't woken for it.
+// A job or a card doesn't say the language the rules speak, or rules logged before there was one speak anything but the
+// Simplified Chinese they always did, whatever the process deciding them speaks.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -267,6 +269,32 @@ test("a card's resend comes due at its time, and stops being due once that's pas
   assert.equal(resendAt(sent), at(61));
   act("delivered", ["chat", sent, version, "om_1"], at(60));
   assert.equal(resendAt(sent), undefined);
+});
+
+test("a job and a card speak the rules' language; rules logged before there was one speak Simplified Chinese", async () => {
+  const { speak, spoken } = await import("../words/words.ts");
+  const before = spoken();
+  speak("en");
+  try {
+    for (const [given, expected] of [
+      ["zh-TW", "zh-TW"],
+      [undefined, "zh-CN"],
+    ] as const) {
+      const these = { ...rules, language: given };
+      let v = evolve(empty(), decide(empty(), { type: "rules", args: [these] }, 1, environment).facts);
+      const act = (type: string, ...args: unknown[]) => {
+        const d = decide(v, { type, args }, 1000, environment);
+        v = evolve(v, d.facts);
+        return d.value;
+      };
+      act("ingest", "app", { id: "x", type: "feedback.new" });
+      assert.equal(act("claimNext", "w1", "c").language, expected);
+      act("tell", "k", "应用", "周报");
+      assert.equal(act("nextCard", "chat").language, expected);
+    }
+  } finally {
+    speak(before);
+  }
 });
 
 test("an input the kernel doesn't have is refused, even one named like something every object has", () => {

@@ -3,6 +3,7 @@
 // other command went ahead without what a flag it doesn't read had asked for, and a result given to `resolve` must not be
 // taken for flags. All found here by running the real program in a home of its own and looking at what it wrote. Nothing is
 // installed, updated or uninstalled, no service is touched and no Agent is called.
+// `init --language` isn't written into the new rules, or one that isn't a language is.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -69,6 +70,19 @@ test("the flags init does read still reach the config", async () => {
   assert.equal(ran.code, 0, ran.stderr);
   const config = JSON.parse(readFileSync(join(ran.home, "config.json"), "utf8")) as { url: string };
   assert.equal(config.url, "http://127.0.0.1:3361");
+});
+
+test("init --language writes the language into the new rules, and one that isn't a language stops it", async () => {
+  const rulesOf = (ran: Ran) => JSON.parse(readFileSync(join(ran.home, "rules.json"), "utf8"));
+  const ran = await run(["init", "--command", "echo {prompt}", "--language", "zh-TW", "--no-service"]);
+  assert.equal(ran.code, 0, ran.stderr);
+  assert.equal(rulesOf(ran).language, "zh-TW");
+  const plain = await run(["init", "--command", "echo {prompt}", "--no-service"]);
+  assert.equal(rulesOf(plain).language, undefined, "left out, the rules speak the Simplified Chinese they always did");
+  const bad = await run(["init", "--command", "echo {prompt}", "--language", "fr", "--no-service"]);
+  assert.equal(bad.code, 1);
+  assert.match(bad.stderr, /zh-CN、zh-TW 或 en/);
+  assert.equal(existsSync(join(bad.home, "config.json")), false);
 });
 
 test("try --help says how to use it and runs nothing", async () => {

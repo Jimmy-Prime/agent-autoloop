@@ -1,9 +1,12 @@
 // What the kernel reads in rules: their shape and which events a rule takes. The rules file is checked before it gets
 // here, in protocol/rules.ts.
+import type { Language } from "../words/words.ts";
 export type Access = "read" | "edit" | "full";
 export type Source = { name: string; adapter?: string };
 type AgentOptions = { model?: string; effort?: string; command?: string[]; timeout?: number };
 export type Agent = AgentOptions & { name: string; worker: string; use: string; access: Access };
+/** The language rules speak. Logged before there was one, they speak the Simplified Chinese they always did. */
+export const languageOf = (rules: { language?: Language } | undefined): Language => rules?.language ?? "zh-CN";
 export type Channel = { name: string; answerers?: string[]; links?: boolean };
 export type Tell = "always" | "needed" | "never";
 type EventFilter = { source: string; types: string[] };
@@ -26,7 +29,13 @@ export type Elsewhere = RuleWords & {
   cwd?: string;
 };
 type Registered = { sources: Record<string, Source>; agents: Record<string, Agent>; channels: Record<string, Channel> };
-export type Rules = Registered & { timezone: string; askFirst: string[]; rules: Rule[]; elsewhere: Elsewhere[] };
+export type Rules = Registered & {
+  timezone: string;
+  language: Language;
+  askFirst: string[];
+  rules: Rule[];
+  elsewhere: Elsewhere[];
+};
 
 /** The source of what the clock makes happen. */
 export const SCHEDULE = "schedule";

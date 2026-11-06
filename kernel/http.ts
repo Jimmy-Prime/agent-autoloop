@@ -4,6 +4,7 @@ import { whose, type Environment } from "./credentials.ts";
 import { AuthError, Conflict, InputError, NotFound } from "./errors.ts";
 import type { Row, View } from "./evolve.ts";
 import { agentsOf, cancels, cardView, configuration } from "./query.ts";
+import { languageOf } from "./rules.ts";
 import { isAsk } from "../protocol/validate.ts";
 
 export type Services = {
@@ -106,7 +107,10 @@ async function cardAtLink(call: Call, linkToken: string) {
   if (call.now - Date.parse(card.created_at) > LINK_LIFETIME) {
     throw new AuthError("这个链接过期了。在装它的电脑上运行 agent-autoloop status，还没答的卡片都在那里，可以接着回答");
   }
-  if (request.method === "GET") return new Response(cardPage(cardView(card, environment)), { headers: PAGE_HEADERS });
+  if (request.method === "GET")
+    return new Response(cardPage(cardView(card, environment, null, false, languageOf(rules))), {
+      headers: PAGE_HEADERS,
+    });
   const form = new URLSearchParams(await readText(request));
   const choice = form.has("choice") && { choice: Number(form.get("choice")) };
   act(call, "answer", card.id, { ...choice, text: form.get("text") ?? undefined, by: "链接" });

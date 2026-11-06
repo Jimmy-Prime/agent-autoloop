@@ -13,13 +13,14 @@ import { installService, removeService, restartService, serviceRunning, systemUn
 import { versionLine } from "../host/version.ts";
 import { spendLine } from "./spend.ts";
 import { attemptsOf, newFailure, waitingRetry } from "./try.ts";
+import { isLanguage, type Language } from "../words/words.ts";
 
 const ROOT = path.join(import.meta.dirname, "..");
 const PROGRAM = path.join(ROOT, "bin", "agent-autoloop.ts");
 
 const HELP = `Agent 自动化中台
 
-  agent-autoloop init [--agent claude|codex] [--command '某个命令 {prompt}'] [--port 3350] [--no-service]
+  agent-autoloop init [--agent claude|codex] [--command '某个命令 {prompt}'] [--port 3350] [--language zh-CN|zh-TW|en] [--no-service]
                                     在这台电脑上装好：一个人一台电脑就够
   agent-autoloop try                     用你的 Agent 跑一遍完整流程
   agent-autoloop why <第几轮> [--json]  查看时间线；--json 输出原始事实
@@ -65,11 +66,12 @@ const HELP = `Agent 自动化中台
 
 配置和数据在 ${HOME}。规则在 ${RULES_FILE}，改了自动生效。`;
 
-const INIT_USAGE = `用法：agent-autoloop init [--agent claude|codex] [--command '某个命令 {prompt}'] [--port 3350] [--no-service]
+const INIT_USAGE = `用法：agent-autoloop init [--agent claude|codex] [--command '某个命令 {prompt}'] [--port 3350] [--language zh-CN|zh-TW|en] [--no-service]
 
   --agent      只接这个 Agent：claude 或 codex。不写就接本机装好的全部
   --command    改用别的命令行 Agent；{prompt} 会作为一个独立参数传进去
   --port       中台监听的端口，默认 3350
+  --language   界面和卡片用的语言：zh-CN、zh-TW 或 en，写进 rules.json。不写就是简体中文
   --no-service 先不装系统服务，之后手动运行 agent-autoloop up`;
 
 const TRY_USAGE = `用法：agent-autoloop try
@@ -113,7 +115,7 @@ rules.json 里这个定时任务要写 cwd；你答了，中台叫醒它的 Agen
     usage:
       "用法：agent-autoloop emit <类型> [--dry-run] [--subject x] [--summary x] [--detail x] [--link x] [--id x] [--key 来源密钥]",
   },
-  init: { flags: ["agent", "command", "port", "no-service"], usage: INIT_USAGE },
+  init: { flags: ["agent", "command", "port", "language", "no-service"], usage: INIT_USAGE },
   join: {
     flags: ["worker", "key", "no-service"],
     usage: "用法：agent-autoloop join <中台地址> --worker <名字> --key <密钥> [--no-service]",
@@ -186,8 +188,9 @@ const ownerClient = (config = readConfig()) =>
   client(config.owner ?? fail("这台电脑上没有本人的密钥（只接活的电脑看不了）"), config);
 
 /** The first rules of a new install: its agents and one rule to try the whole loop with. */
-function starterRules(agents: Record<string, object>, first: string) {
+function starterRules(agents: Record<string, object>, first: string, language?: Language) {
   return {
+    ...(language && { language }),
     sources: { local: { name: "本机" } },
     agents,
     channels: { desktop: { name: "桌面通知" } },
@@ -263,6 +266,8 @@ async function init(args: string[]) {
   // `init -p 4000` would otherwise install on the default port in silence.
   if (rest.length) return fail(`不认识的参数：${rest.join(" ")}\n\n${INIT_USAGE}`);
   if (existsSync(CONFIG_FILE)) return fail(`已经装过了：${CONFIG_FILE}`);
+  const language = text(named.language);
+  if (language !== undefined && !isLanguage(language)) return fail(`--language 要是 zh-CN、zh-TW 或 en：${language}`);
   mkdirSync(HOME, { recursive: true, mode: 0o700 });
   mkdirSync(path.join(HOME, "try"), { recursive: true });
   const hostName = hostname()
@@ -280,7 +285,7 @@ async function init(args: string[]) {
   const url = `http://127.0.0.1:${port}`;
   const ownRules = !existsSync(RULES_FILE);
   if (ownRules) {
-    writeFileSync(RULES_FILE, `${JSON.stringify(starterRules(agents, Object.keys(agents)[0]), null, 2)}\n`);
+    writeFileSync(RULES_FILE, `${JSON.stringify(starterRules(agents, Object.keys(agents)[0], language), null, 2)}\n`);
   }
   const { addKey } = await import("../host/runtime.ts");
   const config: Config = {

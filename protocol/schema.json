@@ -556,6 +556,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "language": {
+          "enum": ["zh-CN", "zh-TW", "en"]
         }
       },
       "required": ["run", "token", "attempt", "rule", "agent", "session", "askFirst", "context"],
@@ -612,6 +615,9 @@
         },
         "link": {
           "type": ["string", "null"]
+        },
+        "language": {
+          "enum": ["zh-CN", "zh-TW", "en"]
         }
       },
       "required": [

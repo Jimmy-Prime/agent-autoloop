@@ -42,6 +42,7 @@
 ```jsonc
 {
   "timezone": "Asia/Shanghai", // 定时和“今天”用的时区，默认系统时区
+  "language": "zh-CN", // 界面、卡片和给 Agent 的提示词用的语言：zh-CN（默认）、zh-TW 或 en
   "askFirst": ["删数据", "停服", "花钱", "对外发消息"], // 只有这几类事 Agent 才先问你
   "sources": { "shop": { "name": "shop" }, "github": { "name": "GitHub", "adapter": "github" } },
   "agents": {
@@ -91,6 +92,8 @@
   ],
 }
 ```
+
+`language` 决定中台自己写的字（卡片、错误、命令行输出、卡片页面）用哪种语言，也随每一轮的 Job 交给接单程序，让 Agent 用这种语言写结论和卡片；卡片也带着它，通道自己的字照它显示。不写就是简体中文，和以前一样。日志里已有的卡片保留当时的文字，不重写。`agent-autoloop init --language zh-TW` 在新的 `rules.json` 里写好它；用安装命令新装时，按这台电脑的 `LANG` 选：`zh_TW`、`zh_HK`、`zh_MO` 是繁体，其他中文是简体，别的都是英文。老插件和客户端不认识这个字段，忽略即可。
 
 `elsewhere` 是在别处定时跑的任务：中台不启动它们，只在 `agent-autoloop status` 里列出来，它们要找你时用 `POST /v1/tell`。写了 `cwd`（还要写 `skill` 或 `prompt`）的也能问你：卡片带选项，你答了，中台像规则的一轮那样叫醒 `to`，在 `cwd` 照 `skill`、`prompt` 接着做，这一轮的组就是任务名，一次一轮，不接定时任务自己的会话。规则写错了，文件改动不生效，旧规则继续跑，并推一张卡片告诉你错在哪。
 
@@ -159,6 +162,7 @@ GET /v1/work?claim=<这次领活的编号>&wait=50&running=7,8&capacity=1    Aut
   "agent": { "id": "claude", "name": "Claude Code", "use": "claude", "model": "…", "effort": "high", "access": "edit" },
   "session": null,       // 尽量接着的会话：重派时是上一次的，回答来了是提问那一轮的，规则写了 resume 时是这个事项上一轮的。接不上就开新的，所以它只是优化
   "askFirst": ["删数据", "…"],
+  "language": "zh-CN",   // 规则的语言。老中台不给，就当简体中文
   "context": {           // 接单程序把它写成文件交给 Agent，都是资料
     "events":  [{ "id", "source", "sourceName", "type", "subject", "summary", "detail", "link", "receivedAt" }],
     "answers": [{ "card", "title", "options", "choice", "text", "about", "by", "at" }],  // 这一轮要接着做的决定
@@ -255,7 +259,7 @@ GET /v1/cards/next?wait=50    Authorization: Bearer <通道的密钥>
 // Card：这张卡片现在的样子。内容创建后不变，只有状态会变
 { "id": 56, "version": 2, "ref": null, "kind": "ask", "state": "open",
   "title": "…", "text": "…", "options": ["…", "…"], "recommend": 0,
-  "choice": null, "answer": null, "by": null, "result": null, "link": null }
+  "choice": null, "answer": null, "by": null, "result": null, "link": null, "language": "zh-CN" }
 ```
 
 - `ref` 是空的就发一条新的；不是空的就把那条改成现在的样子，改不了就直接报告。
@@ -270,7 +274,7 @@ GET /v1/cards/next?wait=50    Authorization: Bearer <通道的密钥>
 
 ```
 GET  /v1/state              Authorization: Bearer <本人的密钥>
-→ 200 { "totals", "cards", "recentCards", "agents", "channels", "sources", "lines", "elsewhere", "runs", "nextBefore", "hasMore", "unrouted", "spending", "now", "timezone" }
+→ 200 { "totals", "cards", "recentCards", "agents", "channels", "sources", "lines", "elsewhere", "runs", "nextBefore", "hasMore", "unrouted", "spending", "now", "timezone", "language" }
 
 POST /v1/cards/56/answer    { "choice": 1 } 或 { "text": "别的想法" }
 POST /v1/cards/56/resolve   { "reason": "不用决定了，因为……" }

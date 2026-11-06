@@ -3,6 +3,7 @@
 // message saying where: at start it stops the hub, later it leaves the old rules running and the owner is told.
 import { nextRun, parseCron } from "../kernel/cron.ts";
 import { SCHEDULE, type Rule, type Rules } from "../kernel/rules.ts";
+import { isLanguage } from "../words/words.ts";
 
 export class RulesError extends Error {
   readonly issues: string[];
@@ -123,6 +124,7 @@ export function parseRules(json: string, now: number, timezone: string): Rules {
   const issues: string[] = [];
   checkFields(issues, "rules.json ", parsed, [
     ["timezone", isZone, "不是有效的时区", true],
+    ["language", isLanguage, "要是 zh-CN、zh-TW 或 en", true],
     ["askFirst", isWords, "要是文字的列表", true],
     ["sources", isObject, "要是一个对象"],
     ["agents", isObject, "要是一个对象"],
@@ -133,6 +135,7 @@ export function parseRules(json: string, now: number, timezone: string): Rules {
   if (issues.length) throw new RulesError(issues);
   const rules = parsed as Rules;
   rules.timezone ??= timezone;
+  rules.language ??= "zh-CN";
   rules.askFirst ??= ASK_FIRST;
   rules.channels ??= {};
   rules.elsewhere ??= [];

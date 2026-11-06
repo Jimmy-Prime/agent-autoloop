@@ -8,6 +8,15 @@ ROOT="${AGENT_AUTOLOOP_HOME:-$HOME/.agent-autoloop}"
 APP="$ROOT/app"
 PROGRAM="$APP/bin/agent-autoloop.ts"
 
+# A new install speaks this machine's language. One already installed speaks what its rules.json says.
+language_here() {
+  case "${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}" in
+    zh_TW* | zh_HK* | zh_MO*) echo zh-TW ;;
+    zh*) echo zh-CN ;;
+    *) echo en ;;
+  esac
+}
+
 need_node() {
   echo "$1"
   cat <<'END'
@@ -86,7 +95,10 @@ elif [ -f "$ROOT/config.json" ]; then
   echo "更新好了。"
   case " $* " in *" --no-service "*) ;; *) "$PROGRAM" service install ;; esac
 else
-  "$PROGRAM" init "$@"
+  case " $* " in
+    *" --language "*) "$PROGRAM" init "$@" ;;
+    *) "$PROGRAM" init "$@" --language "$(language_here)" ;;
+  esac
 fi
 
 if ! [ "$(command -v agent-autoloop)" -ef "$PROGRAM" ]; then

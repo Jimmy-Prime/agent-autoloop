@@ -2,6 +2,7 @@
 // in this install's folder first, then the ones that ship. A channel in another language needs only the protocol.
 import type { Hub } from "../protocol/client.ts";
 import { loadPlugin } from "./plugins.ts";
+import type { Language } from "../words/words.ts";
 
 export type Card = {
   id: number;
@@ -18,6 +19,8 @@ export type Card = {
   result: string | null;
   link: string | null;
   rule?: string;
+  /** What the hub's rules speak; a hub from before there was one doesn't say. */
+  language?: Language;
 };
 export type ChannelContext = {
   hub: Pick<Hub, "nextCard" | "delivered" | "failed" | "answer">;

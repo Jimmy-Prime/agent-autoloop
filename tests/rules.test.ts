@@ -6,7 +6,8 @@
 // an ACP agent like that which no rule uses and which never hurt anyone being refused; a rule with neither a skill nor a
 // prompt, or without a folder; a misspelt field taken silently; a rule running more than one at a time without saying how many, or
 // rules in one group disagreeing on it; an emit naming a source that isn't there; a rule's channels naming one that isn't there, or none at all; a scheduled task shown on the page naming a source or agent that isn't there or a malformed schedule, or saying how its answers go on without where (cwd), or where without how; a time zone
-// that doesn't exist; the reserved source redefined; a null rule crashes reload instead of keeping the old rules.
+// that doesn't exist; the reserved source redefined; a null rule crashes reload instead of keeping the old rules; a
+// language that isn't one of the three, or none given meaning anything but the Simplified Chinese the rules always spoke.
 // A good file changing on disk takes effect; a bad one doesn't, and says why. A file that is gone or can't be read
 // crashes the hub, at reload or at restart, instead of keeping the rules it had. A file broken while the hub was down
 // is never told, because nothing about it changes after startup has read it.
@@ -150,6 +151,9 @@ test("a mistake says which rule and what is wrong", () => {
   problem((r) => {
     r.askFirst = "删数据";
   }, /askFirst/);
+  problem((r) => {
+    r.language = "zh-Hant";
+  }, /language.*zh-CN、zh-TW 或 en/);
   assert.throws(() => parseRules("{ not json"), /不是 JSON/);
 });
 
@@ -177,6 +181,8 @@ test("what's loaded can be read back", () => {
   assert.equal(ruleNamed("早报")!.to, "a1");
   assert.equal(ruleNamed("没有这条"), undefined);
   assert.equal(rules.timezone, "Asia/Shanghai");
+  assert.equal(rules.language, "zh-CN");
+  assert.equal(parseRules(JSON.stringify({ ...good(), language: "en" })).language, "en");
 });
 
 test("a good file changing on disk takes effect; a bad one leaves the old rules and says why", () => {
